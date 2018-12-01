@@ -70,5 +70,5 @@ typedef struct Weather_Info
 //u_int map;// mode 1, 3에서 현재 지도상황(ex. 한반도 or 서특시 or 충남 or 천안시 )
 //*************************************************************************
 
-//test cord
+//test
 
