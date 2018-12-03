@@ -185,7 +185,6 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="global.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -193,6 +192,7 @@
     <ClInclude Include="Weather.h" />
     <ClInclude Include="WeatherDoc.h" />
     <ClInclude Include="WeatherView.h" />
+    <ClInclude Include="xml_parsing.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MainFrm.cpp" />
@@ -205,8 +205,10 @@
     <ClCompile Include="Weather.cpp" />
     <ClCompile Include="WeatherDoc.cpp" />
     <ClCompile Include="WeatherView.cpp" />
+    <ClCompile Include="xml_parsing.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="res\txt1.bin" />
     <None Include="res\Weather.rc2" />
     <None Include="Weather.reg" />
   </ItemGroup>

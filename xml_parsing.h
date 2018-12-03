@@ -8,10 +8,10 @@
 //Written by KBJ
 //Wrting Log
 //2018/12/01 22:30  ~  2018/12/02 04:25 (6 hours)
+//2018/12/03 20:00  ~
 //#ifndef _XML_PARSING_
 //#define _XML_PARSING_
-
-#include "global.h"
+#include <afxinet.h>
 
 
 //**** Define ******************************
@@ -36,10 +36,12 @@ protected:
 
 	//Functions
 public:
-	CString Get_Weather_From_Url(int sequence); //get body information at sequence, sequence 1 = first 3 hours, now.  2 = next 3 hours
+	CString Get_Weather_From_Url(int sequence, coordinates target_town); //get body information at sequence, sequence 1 = first 3 hours, now.  2 = next 3 hours
 	CString RemoveChar(CString &input); //remove characters except for '0'~'9' and '-'
-	weather_info Parse_info(CString input); //parse CString returned from RemoveChar() and save at weather_info structure
-	weather_info Get_Weather(int sequence);
+	weather_info Parse_info(CString input, weather_info& target); //parse CString returned from RemoveChar() and save at weather_info structure
+	weather_info Get_Weather(int sequence, coordinates target_cord, weather_info& target); //target_town is coordinates that we want to get info 
+	int KBJ::Get_Coordinates_From_Dat();
+
 };
 
 

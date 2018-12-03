@@ -11,6 +11,9 @@
 
 #include "WeatherDoc.h"
 #include "WeatherView.h"
+#include "xml_parsing.h"
+
+extern weather_info info[NUM_OF_COORDINATES];
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -22,6 +25,7 @@
 IMPLEMENT_DYNCREATE(CWeatherView, CView)
 
 BEGIN_MESSAGE_MAP(CWeatherView, CView)
+	ON_WM_LBUTTONDOWN()
 END_MESSAGE_MAP()
 
 // CWeatherView 생성/소멸
@@ -79,3 +83,16 @@ CWeatherDoc* CWeatherView::GetDocument() const // 디버그되지 않은 버전은 인라인�
 
 
 // CWeatherView 메시지 처리기
+
+
+void CWeatherView::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
+	KBJ kbj;
+	kbj.Get_Coordinates_From_Dat();
+	for (int loop = 0; loop < NUM_OF_COORDINATES; loop++)
+	{
+		kbj.Get_Weather(1, info[loop].grid, info[loop]);
+	}
+	CView::OnLButtonDown(nFlags, point);
+}

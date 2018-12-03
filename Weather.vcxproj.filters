@@ -39,7 +39,7 @@
     <ClInclude Include="Resource.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="global.h">
+    <ClInclude Include="xml_parsing.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
@@ -59,10 +59,16 @@
     <ClCompile Include="WeatherView.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="xml_parsing.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Weather.reg" />
     <None Include="res\Weather.rc2">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="res\txt1.bin">
       <Filter>리소스 파일</Filter>
     </None>
   </ItemGroup>

@@ -32,10 +32,71 @@
 
 #include <afxcontrolbars.h>     // MFC의 리본 및 컨트롤 막대 지원
 
+#ifndef _GLOBAL_
+#define _GLOBAL_
+
+//*************************************************************************
+#include <vector>
+
+#define NUM_OF_COORDINATES 11 // 나중에 텍스트 파일이 완성되면 완성된 개수로 바꿔야함.
+//*************************************************************************
+
+//*************************************************************************
+typedef unsigned int u_int;
+typedef unsigned char u_char;
+typedef unsigned long u_long;
+typedef unsigned short u_short;
+
+typedef unsigned int u_32;
+typedef unsigned char u_8;
+typedef unsigned short u_16;
+
+typedef int s_32;
+typedef char s_8;
+typedef short s_16;
 
 
+//*************************************************************************
 
+//*************************************************************************
 
+typedef struct Temp_TimeSlot
+{
+	float tmp; //temp[x]일 때 ,현재시간 + 3*x 시간의 온도. 
+			   //ex) temp[0] = 현재시간이 포함된 3시간, temp[1] = 전체 48시간 중 2번째 시간.
+	float tmx; //최고온도,  999.0 = data missing
+	float tmn; //최저온도,  999.0 = data missing
+}temp_ts;
+
+typedef struct Coordinates
+{
+	u_int gridx, gridy;
+}coordinates;
+
+typedef struct Town_Cord
+{
+	u_int do_, si, dong;
+}town_cord;
+
+typedef struct Weather_Info
+{
+	town_cord cord;  // 주소에서 도, 시, 동 코드(우리가 정하는 것) 
+					 //ex) 충청남도 = 1, 천안시 = 1, 병천면 = 1
+					 //do_ = 1,     si = 1,    dong = 1
+	coordinates grid;   //위도,경도 -> 기상청 좌표 x, y로 변환된 기상청 x,y값.
+	u_int day; //Date : 1 = 오늘, 2 = 내일, 3 = 모레	
+	std::vector<temp_ts> temp;
+	u_int sky;   //하늘상태코드, 1 = 맑음, 2 = 구름조금, 3 = 구름많음, 4 = 흐림
+	u_int pty;   //강수상태코드, 0 = 없음, 1 = 비, 2 = 비/눈, 3 = 눈/비, 4 = 눈
+	u_int pop;   //강수확률 [%]
+	float r6;    //6시간 예상 강수량
+	float s6;    //6시간 예상 적설량
+	float ws;   //wind speed [m/s], 반올림해서 쓴다.
+	u_int wd;   //wind dir, 값 {0~7} = {북,북동,동,남동,남,남서,서,북서}
+	u_int reh;  //습도[%]
+}weather_info;
+
+#endif
 
 
 

@@ -37,6 +37,8 @@ protected:
 // 생성된 메시지 맵 함수
 protected:
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 };
 
 #ifndef _DEBUG  // WeatherView.cpp의 디버그 버전

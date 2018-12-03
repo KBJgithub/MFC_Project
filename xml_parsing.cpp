@@ -1,21 +1,20 @@
 #include <afxinet.h>
 #include "stdafx.h"
-
 #include "xml_parsing.h"
 
-
-
-CString KBJ::Get_Weather_From_Url(int sequence)
+extern weather_info info[NUM_OF_COORDINATES];
+CString KBJ::Get_Weather_From_Url(int sequence, coordinates target_town)
 {
 
 	CString str;// Session Buffer
 	CString str_xml; //Readed String
-
 	CInternetSession session; //Make session object
-	
-	//URL address that we will open
-	//**NEEDED TO BE ADJUSTED
-	CString sURL = _T("http://www.kma.go.kr/wid/queryDFS.jsp?gridx=66&gridy=109");
+	CString g_x, g_y;
+	g_x.Format(_T("%d&gridy="), target_town.gridx);
+	g_y.Format(_T("%d"), target_town.gridy);
+	CString sURL = _T("http://www.kma.go.kr/wid/queryDFS.jsp?gridx=66&gridy=109");//44 : start gridx
+	//sURL.Append(g_x);
+	//sURL.Append(g_y);
 
 	try { //error check. once error is occured, jump to catch( errer handling routine )
 		CInternetFile *p_xml = (CInternetFile *)session.OpenURL(sURL, 1, INTERNET_FLAG_TRANSFER_ASCII | INTERNET_FLAG_DONT_CACHE);
@@ -49,7 +48,6 @@ CString KBJ::Get_Weather_From_Url(int sequence)
 	}
 	return str_xml;
 }
-
 CString KBJ::RemoveChar(CString &input)
 {
 	CString output;
@@ -65,65 +63,94 @@ CString KBJ::RemoveChar(CString &input)
 	}
 	return output;
 }
-weather_info KBJ::Parse_info(CString input)
+weather_info KBJ::Parse_info(CString input, weather_info& target)
 {
-	weather_info tem;
 	temp_ts tem1;
 	int left, right;
 
 	left = input.Find('c');
 	right = input.Find('d');
-	tem.day = _ttoi(input.Mid(left+1, right - left - 1));
+	target.day = _ttoi(input.Mid(left + 1, right - left - 1));
 
 	left = right;
 	right = input.Find('e');
-	tem1.tmp = _ttof(input.Mid(left+1, right - left-1));
+	tem1.tmp = _ttof(input.Mid(left + 1, right - left - 1));
 
 	left = right;
 	right = input.Find('f');
-	tem1.tmx = _ttof(input.Mid(left+1, right - left-1));
+	tem1.tmx = _ttof(input.Mid(left + 1, right - left - 1));
 
 	left = right;
 	right = input.Find('g');
-	tem1.tmn = _ttof(input.Mid(left+1, right - left-1));
-	tem.temp.push_back(tem1);
+	tem1.tmn = _ttof(input.Mid(left + 1, right - left - 1));
+	target.temp.push_back(tem1);
 
 	left = right;
 	right = input.Find('h');
-	tem.sky = _ttoi(input.Mid(left + 1, right - left - 1));
+	target.sky = _ttoi(input.Mid(left + 1, right - left - 1));
 
 	left = right;
 	right = input.Find('i');
-	tem.pty = _ttoi(input.Mid(left + 1, right - left - 1));
+	target.pty = _ttoi(input.Mid(left + 1, right - left - 1));
 
 	left = input.Find('k');
 	right = input.Find('l');
-	tem.pop = _ttoi(input.Mid(left + 1, right - left - 1));
+	target.pop = _ttoi(input.Mid(left + 1, right - left - 1));
 
 	left = input.Find('n');
 	right = input.Find('o');
-	tem.ws = _ttof(input.Mid(left+3, 3));
+	target.ws = _ttof(input.Mid(left + 3, 3));
 
 	left = right;
 	right = input.Find('p');
-	tem.wd = _ttoi(input.Mid(left + 1, right - left - 1));
+	target.wd = _ttoi(input.Mid(left + 1, right - left - 1));
 
 	left = input.Find('r');
 	right = input.Find('s');
-	tem.reh = _ttoi(input.Mid(left + 1, right - left - 1));
+	target.reh = _ttoi(input.Mid(left + 1, right - left - 1));
 
 	left = right;
 	right = input.Find('t');
-	tem.r6 = _ttof(input.Mid(right - 3, 3));
+	target.r6 = _ttof(input.Mid(right - 3, 3));
 
 	left = right;
 	right = input.Find('u');
-	tem.s6 = _ttof(input.Mid(right - 3, 3));
-	
-	return tem;
-}
+	target.s6 = _ttof(input.Mid(right - 3, 3));
 
-weather_info KBJ::Get_Weather(int sequence)
+	return target;
+}
+weather_info KBJ::Get_Weather(int sequence, coordinates target_town, weather_info& target)
 {
-	return Parse_info(RemoveChar(Get_Weather_From_Url(sequence)));
+	return Parse_info(RemoveChar(Get_Weather_From_Url(sequence, target_town)), target);
+}
+int KBJ::Get_Coordinates_From_Dat()
+{
+	CString dat_name = _T("Coordinates.dat"); //실행파일이 있는곳에 좌측의 이름으로 dat파일이 존재해야함. 
+	CStdioFile dat;                           //형식은 엑셀에서 좌표랑 도시동 코드만 복붙 했을 때 나오는 문자열 형식
+	CString buffer;                           //ex) 60\t120\t1\t1\t1  
+	int cut = 0, cnt = 0;
+	dat.Open(dat_name, CFile::modeRead);
+	for (int loop = 0; loop < NUM_OF_COORDINATES; loop++)  //NUM_OF_COORDINATES는 전역으로 정의되어있음. 지금은 텍스트 파일에 정보가
+	{                                                      //11줄만 있어서 11로 되어있음 모든 주소가 완성되면 그 주소의 개수로 변할 것.
+		dat.ReadString(buffer);
+		for (int loop1 = 0; loop1 < buffer.GetLength(); loop1++)
+		{			
+			if (buffer[loop1] == '\t' || buffer[loop] == '\n')
+			{
+				switch (cnt)
+				{
+					case 0:info[loop].grid.gridx = _ttoi(buffer.Mid(cut, loop1 - cut)); break;
+					case 1:info[loop].grid.gridy = _ttoi(buffer.Mid(cut+1, loop1 - cut)); break;
+					case 2:info[loop].cord.do_ = _ttoi(buffer.Mid(cut + 1, loop1 - cut)); break;
+					case 3:info[loop].cord.si = _ttoi(buffer.Mid(cut + 1, loop1 - cut));
+					       info[loop].cord.dong = _ttoi(buffer.Mid(cut + 1, buffer.GetLength())); break;
+				}
+				cut = loop1;
+				cnt++;
+			}
+		}
+		cut = 0; cnt = 0;
+	}
+	dat.Close();
+	return 0;
 }

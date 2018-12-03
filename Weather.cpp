@@ -49,7 +49,7 @@ CWeatherApp theApp;
 BOOL CWeatherApp::InitInstance()
 {
 	CWinApp::InitInstance();
-
+	
 
 	EnableTaskbarInteraction(FALSE);
 
