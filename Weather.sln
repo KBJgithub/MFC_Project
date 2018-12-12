@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Weather", "Weather.vcxproj", "{F4EDF8B7-21F6-4EA6-9FB8-57A2AA43C71D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Weather", "Weather\Weather.vcxproj", "{1B9F85D3-7F4F-4EF4-B207-D8361F346C54}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,14 +13,14 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F4EDF8B7-21F6-4EA6-9FB8-57A2AA43C71D}.Debug|x64.ActiveCfg = Debug|x64
-		{F4EDF8B7-21F6-4EA6-9FB8-57A2AA43C71D}.Debug|x64.Build.0 = Debug|x64
-		{F4EDF8B7-21F6-4EA6-9FB8-57A2AA43C71D}.Debug|x86.ActiveCfg = Debug|Win32
-		{F4EDF8B7-21F6-4EA6-9FB8-57A2AA43C71D}.Debug|x86.Build.0 = Debug|Win32
-		{F4EDF8B7-21F6-4EA6-9FB8-57A2AA43C71D}.Release|x64.ActiveCfg = Release|x64
-		{F4EDF8B7-21F6-4EA6-9FB8-57A2AA43C71D}.Release|x64.Build.0 = Release|x64
-		{F4EDF8B7-21F6-4EA6-9FB8-57A2AA43C71D}.Release|x86.ActiveCfg = Release|Win32
-		{F4EDF8B7-21F6-4EA6-9FB8-57A2AA43C71D}.Release|x86.Build.0 = Release|Win32
+		{1B9F85D3-7F4F-4EF4-B207-D8361F346C54}.Debug|x64.ActiveCfg = Debug|x64
+		{1B9F85D3-7F4F-4EF4-B207-D8361F346C54}.Debug|x64.Build.0 = Debug|x64
+		{1B9F85D3-7F4F-4EF4-B207-D8361F346C54}.Debug|x86.ActiveCfg = Debug|Win32
+		{1B9F85D3-7F4F-4EF4-B207-D8361F346C54}.Debug|x86.Build.0 = Debug|Win32
+		{1B9F85D3-7F4F-4EF4-B207-D8361F346C54}.Release|x64.ActiveCfg = Release|x64
+		{1B9F85D3-7F4F-4EF4-B207-D8361F346C54}.Release|x64.Build.0 = Release|x64
+		{1B9F85D3-7F4F-4EF4-B207-D8361F346C54}.Release|x86.ActiveCfg = Release|Win32
+		{1B9F85D3-7F4F-4EF4-B207-D8361F346C54}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
