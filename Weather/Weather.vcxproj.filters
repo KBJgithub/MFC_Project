@@ -45,9 +45,6 @@
     <ClInclude Include="DialogSetting.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="PictureEx.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -69,9 +66,6 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="DialogSetting.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="PictureEx.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -153,6 +147,84 @@
       <Filter>리소스 파일</Filter>
     </Image>
     <Image Include="res\setting.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\SUN1.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\SUN2.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\아이콘.ico">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\Cloudy.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\Littlecloud.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\1-1.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\2-1.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\2-2.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\2-3.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\3-1.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\3-2.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\3-3.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\4-1.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\4-2.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\4-3.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\5-1.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\5-2.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\5-3.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\6-1.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\6-2.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\6-3.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\7-1.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\7-2.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\7-3.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\1-2.bmp">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="res\1-3.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>

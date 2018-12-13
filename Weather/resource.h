@@ -29,6 +29,31 @@
 #define IDB_NALSSI                      329
 #define IDD_DIALOG1                     330
 #define IDB_BITMAP3                     332
+#define IDB_WHITE                       334
+#define IDB_BITMAP4                     335
+#define IDB_CLOUDY                      337
+#define IDB_LCLOUD                      338
+#define IDB_SUNNY                       339
+#define IDB_SCLOUD_1                    340
+#define IDB_SCLOUD_2                    341
+#define IDB_SCLOUD_3                    342
+#define IDB_MCLOUD_1                    343
+#define IDB_MCLOUD_2                    344
+#define IDB_MCLOUD3                     345
+#define IDB_CLOUD_1                     346
+#define IDB_CLOUD_2                     347
+#define IDB_CLOUD_3                     348
+#define IDB_RAIN_1                      349
+#define IDB_RAIN_2                      350
+#define IDB_RAIN_3                      351
+#define IDB_SNOWRAIN_1                  352
+#define IDB_SNOWRAIN_2                  353
+#define IDB_SNOWRAIN_3                  354
+#define IDB_SNOW_1                      358
+#define IDB_SNOW_2                      359
+#define IDB_SNOW_3                      360
+#define IDB_SUNNY2                      361
+#define IDB_SUNNY3                      362
 #define IDC_CHECK1                      1000
 #define IDC_COMBO1                      1001
 #define IDC_COMBO2                      1002
@@ -48,7 +73,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        333
+#define _APS_NEXT_RESOURCE_VALUE        363
 #define _APS_NEXT_COMMAND_VALUE         32772
 #define _APS_NEXT_CONTROL_VALUE         1009
 #define _APS_NEXT_SYMED_VALUE           310

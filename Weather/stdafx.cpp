@@ -17,7 +17,7 @@ u_int fix = 0; // 화면에 고정할 것인지에 대한 flag 변수.
 u_int user_do = 1;
 u_int user_si = 1;
 u_int user_dong = 1 ; //사용자가 주목하고있는 하나의 특정 도시코드( 시간대별로 나타낼 도시 코드)
-u_int mode = 3; // 1 = 지도만, 2 = 특정 동네의 시간대별 날씨만, 3 = 둘다  ps. 후에 추가로 위치 배치에 관한 mode가 추가될 수 있음.
+u_int mode = 1; // 1 = 지도만, 2 = 특정 동네의 시간대별 날씨만, 3 = 둘다  ps. 후에 추가로 위치 배치에 관한 mode가 추가될 수 있음.
 u_int update = 3600; //업데이트 주기. s
 std::vector<weather_info> info(NUM_OF_COORDINATES);
 std::vector<CRect> regions(NUM_OF_REGIONS);
@@ -31,19 +31,9 @@ std::vector<address_info> address(NUM_OF_ADDRESS);
 int POSIT = 0;
 int *index;
 int wakeup_thread = 0;
-//================================================================================================
-//		[0][0] , 첫번째 [0] : 전체 지도에서 각 구역				
-//               두번째 [0] : 도, 특, 광역시에서 분할한 각 구역 
-//      [0] : 전국지도 ( 두번째는 아래에 할당된 번호에 해당하는 지역의 사각형 )
-//      [1] : 서울      [2] : 경기도      [3] : 인천       [4] : 강원도    [5] : 충남 
-//      [6] : 대전      [7] : 충북        [8] : 경상북도   [9] : 대구
-//     [10] : 전라북도 [11] : 광주       [12] : 경상남도  [13] : 울산 
-//     [14] : 부산     [15] : 전라남도   [16] : 제주도    [17] : 뒤로가기 버튼
+
 CRect map_rect[17][17];
 int map_status = 0;//전도
-//================================================================================================
-
-
 
 //OOOOOOOOOOOOOOOOOOOOOOOOOOOO
 //Mode2 관련 변수 : 사용자가 원하는 지역의 상세 정보
@@ -53,7 +43,10 @@ int mode2_y = 0;
 CTime cTime;
 CTime start, now;
 //OOOOOOOOOOOOOOOOOOOOOOOOOOOO
-
+POINT moving_images_pos[30];
+int moving_images_num = 0;
+CWinThread* bmp_Thread;
+//OOOOOOOOOOOOOOOOOOOOOOOOOOOO
 //*************************************************************************
 
 UINT Update_Info_Work_Thread(LPVOID _param)//Work Thread handler to update weather informations
@@ -83,51 +76,8 @@ UINT Update_Info_Work_Thread(LPVOID _param)//Work Thread handler to update weath
 		} 
 		AfxGetMainWnd()->Invalidate(1);
 		cs.Unlock(); //스레드가 공유자원 권한을 잃고 다른 함수에서 info, num_town, towns 변수의 수정이 가능해짐.
-	//	Wait_My(update);
-		Sleep(100000);
-	}
-	
+
+		Sleep(3600*1000*update);
+	}	
 	return 0;
 }
-
-void Wait_My(int delay)
-{
-	start = CTime::GetCurrentTime();
-	while (((now.GetSecond() - start.GetSecond()) != delay ) && wakeup_thread != 1)
-	{
-		now = CTime::GetCurrentTime();
-	}
-	wakeup_thread = 0;
-}
-
-/*
-CToolTipCtrl*   m_pToolTip;  // 선언해 주고
-
-OnInitDialog(){}   에서 생성해 주고
-
-m_pToolTip = new CToolTipCtrl;
-m_pToolTip->Create(this, TTS_ALWAYSTIP|TTS_NOPREFIX);
-m_pToolTip->SetDelayTime(500);
-m_pToolTip->Activate(TRUE);
-
-
-void OnMouseMove(UINT nFlags, CPoint point){ // 마우스이동함수에서 출력해 주고
-CString strTemp;
-strTemp.Format("%5d,%5d",point.x,point.y);
-//        strTemp.Format("%5ld",lUnitSize);
-m_pToolTip->Activate(TRUE);
-m_pToolTip->AddTool(this,strTemp, CRect(point.x-1,point.y-1,point.x+1,point.y+1), TRUE);    // skin[i].rc    각 버튼들의 Rect...
-m_pToolTip->Update();
-
-
-CDialog::OnMouseMove(nFlags, point);
-}
-
-
-BOOL CMy1Dlg::PreTranslateMessage(MSG* pMsg) 
-{ // 화면에 출력 이벤트 걸어주고
-m_pToolTip->RelayEvent(pMsg);
-return CDialog::PreTranslateMessage(pMsg);
-}
-[Reference] : WhiteAT, 「C/C++/MFC - 툴팁을 이용하여 마우스 위치 나타내기」 http://whiteat.com/?mid=WhiteAT_c&document_srl=5771.
-*/

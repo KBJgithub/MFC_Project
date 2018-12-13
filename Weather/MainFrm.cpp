@@ -7,11 +7,8 @@
 
 #include "MainFrm.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#define WM_TRAY_NOTIFICATION WM_APP + 1	
-#endif
 
+#define WM_TRAY_NOTIFICATION WM_APP + 1	
 // CMainFrame
 
 IMPLEMENT_DYNCREATE(CMainFrame, CFrameWnd)
@@ -19,11 +16,8 @@ IMPLEMENT_DYNCREATE(CMainFrame, CFrameWnd)
 BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_CREATE()
 	ON_MESSAGE(WM_TRAY_NOTIFICATION, OnTrayNotification) //메시지와 메시지 핸들러를 연결 
-	//ON_UPDATE_COMMAND_UI(ID_INDICATOR_POS, OnUpdatePos)
-	//ON_WM_ERASEBKGND()
 	ON_WM_DESTROY()
 	ON_WM_DESTROY()
-//	ON_WM_KEYDOWN()
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -62,44 +56,6 @@ LRESULT CMainFrame::OnTrayNotification(WPARAM wParam, LPARAM lParam)			//Tray 아
 	{
 		ShowWindow(SW_SHOW);
 	}
-	/*
-	switch (lParam)
-	{
-	case WM_RBUTTONDOWN:
-	{
-	CPoint ptMouse;
-	::GetCursorPos(&ptMouse);
-
-	CMenu menu;
-	menu.LoadMenu(IDR_MAINFRAME);
-	CMenu *pMenu = menu.GetSubMenu(0); //활성화 할 메뉴 지정
-	pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON,
-	ptMouse.x, ptMouse.y, AfxGetMainWnd());
-	if (lParam == WM_LBUTTONDOWN) {
-
-	}
-
-	}
-	break;*/
-	/*
-	case WM_LBUTTONDBLCLK:
-	{
-	NOTIFYICONDATA nid;
-	ZeroMemory(&nid, sizeof(nid));
-	nid.cbSize = sizeof(nid);
-	nid.uID = 0;
-	nid.hWnd = GetSafeHwnd();
-
-	BOOL bRet = ::Shell_NotifyIcon(NIM_DELETE, &nid); //트레이아이콘 제거
-	if (!bRet)
-	{
-	AfxMessageBox(_T("트레이 아이콘 제거 실패"));
-	return -1;
-	}
-	AfxGetApp()->m_pMainWnd->ShowWindow(SW_SHOW); //윈도우 활성화
-	}
-	break;*/
-
 	return 1;
 }
 int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -107,26 +63,16 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
-
-	//========================================== 트레이 아이콘 선언부 ==============================================================================
-	// 1. #define WM_TRAY_NOTIFICATION WM_APP + 1 해주기 
-	// 2. Oncreate에 아래와 같은 코드 작성 
-	// 3.ON_MESSAGE(WM_TRAY_NOTIFICATION, OnTrayNotification) 메시지와 메시지 핸들러를 연결 OnMessage 작성 
-	// 4. LRESULT CMainFrame::OnTrayNotification(WPARAM wParam, LPARAM lParam) 함수 선언 MainFirm.cpp에 
-	// 5. MainFirm 헤더에 afx_msg LRESULT OnTrayNotification(WPARAM, LPARAM); 선언 
-	// 6. Ondestroy에서 트레이 아이콘 제거 
 	NOTIFYICONDATA nid;
 	ZeroMemory(&nid, sizeof(nid));
 	nid.cbSize = sizeof(nid);
 	nid.uID = 0;										// uID로 여러 Tray를 설정할 수 있다고 함. 0은 개수가 아니라 ID임
 	nid.hWnd = GetSafeHwnd();
-
 	nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
 	nid.hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);	// 아이콘 등록 IDR_MAINFRAME 아이콘을 사용, 이건 내가 만들 수도 있고 인터넷에서 베껴와도됨 
 														// But 아이콘 크기를 32*32비트로 조정하는 것이 좋음. 
 	lstrcpy(nid.szTip, _T("내 트레이"));				// 이건 마우스를 아이콘 위에 올려놓으면 _T("")에 툴팁처럼 말이 뜸 이것 또한 이름을 바꾸면 됨. 
 	nid.uCallbackMessage = WM_TRAY_NOTIFICATION;		// TRAY 메시지를 띄우기 위해 uCallbackMessage를 사용. 
-
 	BOOL bRet = ::Shell_NotifyIcon(NIM_ADD, &nid);
 
 
@@ -192,10 +138,3 @@ void CMainFrame::OnDestroy()
 	// TODO: 여기에 메시지 처리기 코드를 추가합니다.
 }
 
-
-//void CMainFrame::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
-//{
-//	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
-//	int a;
-//	CFrameWnd::OnKeyDown(nChar, nRepCnt, nFlags);
-//}

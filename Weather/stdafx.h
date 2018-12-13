@@ -122,11 +122,6 @@ typedef struct Town_Cord
 {
 	u_int do_, si, dong;
 }town_cord;
-typedef struct Update_Work_Thread_Param
-{
-	Town_Cord * towns;
-	int num_towns;
-}update_work_thread_param;
 typedef struct Address_info
 {
 	CString addressDo;
@@ -142,17 +137,18 @@ typedef struct Weather_Info
 	coordinates grid;   //위도,경도 -> 기상청 좌표 x, y로 변환된 기상청 x,y값.
 	u_int day; //Date : 1 = 오늘, 2 = 내일, 3 = 모레	
 	std::vector<temp_ts> temp;
-	u_int sky;   //하늘상태코드, 1 = 맑음, 2 = 구름조금, 3 = 구름많음, 4 = 흐림
-	u_int pty;   //강수상태코드, 0 = 없음, 1 = 비, 2 = 비/눈, 3 = 눈/비, 4 = 눈
+	//u_int sky;   //하늘상태코드, 1 = 맑음, 2 = 구름조금, 3 = 구름많음, 4 = 흐림
+	//u_int pty;   //강수상태코드, 0 = 없음, 1 = 비, 2 = 비/눈, 3 = 눈/비, 4 = 눈
+	std::vector<u_int> sky;
+	std::vector<u_int> pty;
 	std::vector<u_int> pop; //강수확률 [%]
-	//u_int pop;  
+							//u_int pop;  
 	float r6;    //6시간 예상 강수량
 	float s6;    //6시간 예상 적설량
 	std::vector<float> ws;   //wind speed [m/s], 반올림해서 쓴다.
 	u_int wd;   //wind dir, 값 {0~7} = {북,북동,동,남동,남,남서,서,북서}
 	std::vector<u_int> reh;  //습도[%]
 }weather_info;
-
 //*************************************************************************
 
 #endif

@@ -6,7 +6,7 @@
 typedef struct addressDlg {
 	int num;
 	CString str;
-};
+}addressDlg_;
 
 
 class CDialogSetting : public CDialogEx
@@ -58,7 +58,4 @@ public:
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnCbnSelchangeCombo2();
 	afx_msg void OnCbnSelchangeCombo3();
-	afx_msg void OnCbnSelchangeCombo4();
-	afx_msg void OnDestroy();
-	afx_msg void OnCbnSelchangeCombo5();
 };

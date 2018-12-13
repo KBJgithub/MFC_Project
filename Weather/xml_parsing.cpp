@@ -12,9 +12,8 @@ extern CRect map_rect[17][17];
 extern u_int mode;
 extern std::vector<address_info> address;
 extern int POSIT;
-CString KBJ::Get_Weather_From_Url(int sequence, coordinates target_town)
+CString KBJ::Get_Weather_From_Url(int sequence, coordinates target_town)//URL에서 xml데이터를 받아오는 함수
 {
-
 	CString str;// Session Buffer
 	CString str_xml; //Readed String
 	CInternetSession session; //Make session object
@@ -57,7 +56,7 @@ CString KBJ::Get_Weather_From_Url(int sequence, coordinates target_town)
 	}
 	return str_xml;
 }
-CString KBJ::RemoveChar(CString &input)
+CString KBJ::RemoveChar(CString &input)//xml데이터에서 필요한 문자를 제외한 나머지를 지우는 함수, 
 {
 	CString output;
 	char *cmp;
@@ -68,11 +67,11 @@ CString KBJ::RemoveChar(CString &input)
 		if (('0' <= cmp[loop] && cmp[loop] <= '9') || (cmp[loop] == '.') || (cmp[loop] == '-'))
 			output += cmp[loop];
 		else if (cmp[loop] == '"' || cmp[loop] == '/')
-			output += point++;
+			output += point++; // '/'나 '"'를 만나면 알파벳을 집어넣어 나중에 문자를 편집할 수 있게 만든다
 	}
 	return output;
 }
-weather_info KBJ::Parse_info_seq_1(CString input, weather_info& target)
+weather_info KBJ::Parse_info_seq_1(CString input, weather_info& target) //현재시간을 포함한 3시간 단위의 정보를 받아오는 함수
 {
 	temp_ts tem1;
 	int left, right, cnt = 0;
@@ -83,24 +82,24 @@ weather_info KBJ::Parse_info_seq_1(CString input, weather_info& target)
 
 	left = right;
 	right = input.Find('e');
-	tem1.tmp = _ttof(input.Mid(left + 1, right - left - 1));
+	tem1.tmp = (float)_ttof(input.Mid(left + 1, right - left - 1));
 
 	left = right;
 	right = input.Find('f');
-	tem1.tmx = _ttof(input.Mid(left + 1, right - left - 1));
+	tem1.tmx = (float)_ttof(input.Mid(left + 1, right - left - 1));
 
 	left = right;
 	right = input.Find('g');
-	tem1.tmn = _ttof(input.Mid(left + 1, right - left - 1));
+	tem1.tmn = (float)_ttof(input.Mid(left + 1, right - left - 1));
 	target.temp.push_back(tem1);
 
 	left = right;
 	right = input.Find('h');
-	target.sky = _ttoi(input.Mid(left + 1, right - left - 1));
+	target.sky.push_back(_ttoi(input.Mid(left + 1, right - left - 1)));
 
 	left = right;
 	right = input.Find('i');
-	target.pty = _ttoi(input.Mid(left + 1, right - left - 1));
+	target.pty.push_back( _ttoi(input.Mid(left + 1, right - left - 1)));
 
 	left = input.Find('k');
 	right = input.Find('l');
@@ -108,7 +107,7 @@ weather_info KBJ::Parse_info_seq_1(CString input, weather_info& target)
 
 	left = input.Find('n');
 	right = input.Find('o');
-	target.ws.push_back(_ttof(input.Mid(left + 3, 3)));
+	target.ws.push_back((float)_ttof(input.Mid(left + 3, 3)));
 
 	left = right;
 	right = input.Find('p');
@@ -120,18 +119,18 @@ weather_info KBJ::Parse_info_seq_1(CString input, weather_info& target)
 
 	left = right;
 	right = input.Find('t');
-	target.r6 = _ttof(input.Mid(right - 3, 3));
+	target.r6 = (float)_ttof(input.Mid(right - 3, 3));
 
 	left = right;
 	right = input.Find('u');
-	target.s6 = _ttof(input.Mid(right - 3, 3));
+	target.s6 = (float)_ttof(input.Mid(right - 3, 3));
 	while ((target.temp[0].tmx == -999) && cnt != 15 )
 	{
 		cnt++;
 		tem = RemoveChar(Get_Weather_From_Url(cnt, target.grid));
 		left = tem.Find('e');
 		right = tem.Find('f');
-		target.temp[0].tmx = _ttof(tem.Mid(left + 1, right - left - 1));
+		target.temp[0].tmx = (float)_ttof(tem.Mid(left + 1, right - left - 1));
 	}
 	cnt = 0;
 	while ((target.temp[0].tmn == -999) && cnt != 15)
@@ -140,7 +139,7 @@ weather_info KBJ::Parse_info_seq_1(CString input, weather_info& target)
 		tem = RemoveChar(Get_Weather_From_Url(cnt, target.grid));
 		left = tem.Find('f'); 
 		right = tem.Find('g');
-		target.temp[0].tmn = _ttof(tem.Mid(left+1 , right - left - 1));
+		target.temp[0].tmn = (float)_ttof(tem.Mid(left+1 , right - left - 1));
 		//target.temp.push_back(tem1);
 	}
 
@@ -148,28 +147,36 @@ weather_info KBJ::Parse_info_seq_1(CString input, weather_info& target)
 
 	return target;
 }
-weather_info KBJ::Parse_info_seq_all(weather_info& target)
+weather_info KBJ::Parse_info_seq_all(weather_info& target)//사용자가 주목하고있는 주소의 정보를 받아오는 함수(특정 값들은 30시간의 데이터를 받아온다)
 {
 	temp_ts tem1;
 	int left, right;
 	float tem_min, tem_max;
 	CString input;
 	Parse_info_seq_1(RemoveChar(Get_Weather_From_Url(0, target.grid)), target);
-	for(int loop = 1; loop < NUM_SEQUENCE_TO_SHOW; loop++)
+	for (int loop = 1; loop < NUM_SEQUENCE_TO_SHOW; loop++)
 	{
 		input = RemoveChar(Get_Weather_From_Url(loop, target.grid));
 		left = input.Find('d');
 		right = input.Find('e');
-		tem1.tmp = _ttof(input.Mid(left + 1, right - left - 1));
+		tem1.tmp = (float)_ttof(input.Mid(left + 1, right - left - 1));
 
 		left = right;
 		right = input.Find('f');
-		tem1.tmx = _ttof(input.Mid(left + 1, right - left - 1));
-		
+		tem1.tmx = (float)_ttof(input.Mid(left + 1, right - left - 1));
+
 		left = right;
 		right = input.Find('g');
-		tem1.tmn = _ttof(input.Mid(left + 1, right - left - 1));
+		tem1.tmn = (float)_ttof(input.Mid(left + 1, right - left - 1));
 		target.temp.push_back(tem1);
+
+		left = right;
+		right = input.Find('h');
+		target.sky.push_back(_ttoi(input.Mid(left + 1, right - left - 1)));
+
+		left = right;
+		right = input.Find('i');
+		target.pty.push_back(_ttoi(input.Mid(left + 1, right - left - 1)));
 
 		left = input.Find('k');
 		right = input.Find('l');
@@ -177,7 +184,7 @@ weather_info KBJ::Parse_info_seq_all(weather_info& target)
 
 		left = input.Find('n');
 		right = input.Find('o');
-		target.ws.push_back(_ttof(input.Mid(left + 3, 3)));
+		target.ws.push_back((float)_ttof(input.Mid(left + 3, 3)));
 
 		left = input.Find('r');
 		right = input.Find('s');
@@ -204,7 +211,7 @@ weather_info KBJ::Get_Weather(int sequence, coordinates target_town, weather_inf
 	if (main == 1) return Parse_info_seq_all(target);
 	return Parse_info_seq_1(RemoveChar(Get_Weather_From_Url(sequence, target_town)), target);
 }
-int KBJ::Get_Coordinates_From_Dat()
+int KBJ::Get_Coordinates_From_Dat()//dat파일에서 좌표 코드를 받아오는 함수
 {
 	CString dat_name = _T("Coordinates.dat"); //실행파일이 있는곳에 좌측의 이름으로 dat파일이 존재해야함. 
 	CStdioFile dat;                           //형식은 엑셀에서 좌표랑 도시동 코드만 복붙 했을 때 나오는 문자열 형식
@@ -236,7 +243,7 @@ int KBJ::Get_Coordinates_From_Dat()
 	dat.Close();
 	return 0;
 }
-int KBJ::Get_Index_From_Cord(town_cord search)
+int KBJ::Get_Index_From_Cord(town_cord search) //도시동 코드로부터 info의 index를 얻어오는 함수
 {
 	int cnt = 0;
 	for (int loop = 0; loop < NUM_OF_COORDINATES; loop++)
@@ -248,14 +255,7 @@ int KBJ::Get_Index_From_Cord(town_cord search)
 	}
 	return cnt;
 }
-//		[0][0] , 첫번째 [0] : 전체 지도에서 각 구역				
-//               두번째 [0] : 도, 특, 광역시에서 분할한 각 구역 
-//      [0] : 전국지도 ( 두번째는 아래에 할당된 번호에 해당하는 지역의 사각형 )
-//      [1] : 서울      [2] : 경기도      [3] : 인천       [4] : 강원도    [5] : 충남 
-//      [6] : 대전      [7] : 충북        [8] : 경상북도   [9] : 대구
-//     [10] : 전라북도 [11] : 광주       [12] : 경상남도  [13] : 울산 
-//     [14] : 부산     [15] : 전라남도   [16] : 제주도    [17] : 뒤로가기 버튼
-int KBJ::Set_Towns(int map_status)
+int KBJ::Set_Towns(int map_status) //각 지도별 사각형의 위치를 저장하는 함수
 {
 	switch (map_status)
 	{
@@ -273,10 +273,10 @@ int KBJ::Set_Towns(int map_status)
 		map_rect[0][10].SetRect(539 - ((mode == 3) || (mode == 1))*POSIT, 254, 649 - ((mode == 3) || (mode == 1))*POSIT, 363);      // 충남
 		map_rect[0][11].SetRect(682 - ((mode == 3) || (mode == 1))*POSIT, 236, 729 - ((mode == 3) || (mode == 1))*POSIT, 366);      // 충북
 		map_rect[0][12].SetRect(755 - ((mode == 3) || (mode == 1))*POSIT, 240, 910 - ((mode == 3) || (mode == 1))*POSIT, 382);      // 경북
-		map_rect[0][13].SetRect(531 - ((mode == 3) || (mode == 1))*POSIT, 474, 689 - ((mode == 3) || (mode == 1))*POSIT, 585);   // 전북
+		map_rect[0][13].SetRect(531 - ((mode == 3) || (mode == 1))*POSIT, 474, 689 - ((mode == 3) || (mode == 1))*POSIT, 585);   // 전남
 		map_rect[0][14].SetRect(702 - ((mode == 3) || (mode == 1))*POSIT, 429, 827 - ((mode == 3) || (mode == 1))*POSIT, 549);   // 경남
 		map_rect[0][15].SetRect(852 - ((mode == 3) || (mode == 1))*POSIT, 417, 901 - ((mode == 3) || (mode == 1))*POSIT, 460);   // 울산
-		map_rect[0][16].SetRect(557 - ((mode == 3) || (mode == 1))*POSIT, 382, 686 - ((mode == 3) || (mode == 1))*POSIT, 462);   // 전남
+		map_rect[0][16].SetRect(557 - ((mode == 3) || (mode == 1))*POSIT, 382, 686 - ((mode == 3) || (mode == 1))*POSIT, 462);   // 전북
 		break;
 	case 1:
 		//num_towns = 3;                           //서울
@@ -298,14 +298,14 @@ int KBJ::Set_Towns(int map_status)
 		map_rect[3][2].SetRect(573 - ((mode == 3) || (mode == 1))*POSIT, 382, 840 - ((mode == 3) || (mode == 1))*POSIT, 550);
 		break;
 	case 4:
-		//	num_towns = 4;                           //강원도
+		//   num_towns = 4;                           //강원도
 		map_rect[4][0].SetRect(537 - ((mode == 3) || (mode == 1))*POSIT, 161, 812 - ((mode == 3) || (mode == 1))*POSIT, 420);
 		map_rect[4][1].SetRect(831 - ((mode == 3) || (mode == 1))*POSIT, 122, 1015 - ((mode == 3) || (mode == 1))*POSIT, 364);
 		map_rect[4][2].SetRect(967 - ((mode == 3) || (mode == 1))*POSIT, 403, 1178 - ((mode == 3) || (mode == 1))*POSIT, 622);
 		map_rect[4][3].SetRect(740 - ((mode == 3) || (mode == 1))*POSIT, 438, 945 - ((mode == 3) || (mode == 1))*POSIT, 627);
 		break;
 	case 5:
-		//	num_towns = 4;                           //충남
+		//   num_towns = 4;                           //충남
 		map_rect[5][0].SetRect(560 - ((mode == 3) || (mode == 1))*POSIT, 199, 774 - ((mode == 3) || (mode == 1))*POSIT, 473);
 		map_rect[5][1].SetRect(781 - ((mode == 3) || (mode == 1))*POSIT, 110, 1058 - ((mode == 3) || (mode == 1))*POSIT, 288);
 		map_rect[5][2].SetRect(786 - ((mode == 3) || (mode == 1))*POSIT, 308, 967 - ((mode == 3) || (mode == 1))*POSIT, 554);
@@ -313,71 +313,71 @@ int KBJ::Set_Towns(int map_status)
 
 		break;
 	case 6:
-		//	num_towns = 2;                           //대전
+		//   num_towns = 2;                           //대전
 		map_rect[6][0].SetRect(592 - ((mode == 3) || (mode == 1))*POSIT, 151, 951 - ((mode == 3) || (mode == 1))*POSIT, 327);
 		map_rect[6][1].SetRect(594 - ((mode == 3) || (mode == 1))*POSIT, 341, 911 - ((mode == 3) || (mode == 1))*POSIT, 535);
 		break;
 	case 7:
-		//	num_towns = 4;                           //충북
+		//   num_towns = 4;                           //충북
 		map_rect[7][0].SetRect(577 - ((mode == 3) || (mode == 1))*POSIT, 148, 772 - ((mode == 3) || (mode == 1))*POSIT, 292);
 		map_rect[7][1].SetRect(783 - ((mode == 3) || (mode == 1))*POSIT, 132, 993 - ((mode == 3) || (mode == 1))*POSIT, 291);
 		map_rect[7][2].SetRect(570 - ((mode == 3) || (mode == 1))*POSIT, 303, 802 - ((mode == 3) || (mode == 1))*POSIT, 440);
 		map_rect[7][3].SetRect(620 - ((mode == 3) || (mode == 1))*POSIT, 457, 826 - ((mode == 3) || (mode == 1))*POSIT, 605);
 		break;
 	case 8:
-		//	num_towns = 4;                           //경상북도
+		//   num_towns = 4;                           //경상북도
 		map_rect[8][0].SetRect(553 - ((mode == 3) || (mode == 1))*POSIT, 241, 701 - ((mode == 3) || (mode == 1))*POSIT, 548);
 		map_rect[8][1].SetRect(717 - ((mode == 3) || (mode == 1))*POSIT, 139, 976 - ((mode == 3) || (mode == 1))*POSIT, 330);
 		map_rect[8][2].SetRect(743 - ((mode == 3) || (mode == 1))*POSIT, 345, 1028 - ((mode == 3) || (mode == 1))*POSIT, 596);
 		map_rect[8][3].SetRect(1021 - ((mode == 3) || (mode == 1))*POSIT, 102, 1175 - ((mode == 3) || (mode == 1))*POSIT, 213);
 		break;
 	case 9:
-		//	num_towns = 2;                           //대구
+		//   num_towns = 2;                           //대구
 		map_rect[9][0].SetRect(584 - ((mode == 3) || (mode == 1))*POSIT, 120, 945 - ((mode == 3) || (mode == 1))*POSIT, 314);
 		map_rect[9][1].SetRect(588 - ((mode == 3) || (mode == 1))*POSIT, 325, 922 - ((mode == 3) || (mode == 1))*POSIT, 576);
 		break;
-	case 10:
-		//	num_towns = 4;                           //전라남도
-		map_rect[10][0].SetRect(587 - ((mode == 3) || (mode == 1))*POSIT, 140, 1121 - ((mode == 3) || (mode == 1))*POSIT, 272);
-		map_rect[10][1].SetRect(567 - ((mode == 3) || (mode == 1))*POSIT, 305, 737 - ((mode == 3) || (mode == 1))*POSIT, 535);
-		map_rect[10][2].SetRect(756 - ((mode == 3) || (mode == 1))*POSIT, 296, 912 - ((mode == 3) || (mode == 1))*POSIT, 564);
-		map_rect[10][3].SetRect(920 - ((mode == 3) || (mode == 1))*POSIT, 286, 1103 - ((mode == 3) || (mode == 1))*POSIT, 570);
+	case 15:
+		//   num_towns = 4;                           
+		map_rect[15][0].SetRect(587 - ((mode == 3) || (mode == 1))*POSIT, 140, 1121 - ((mode == 3) || (mode == 1))*POSIT, 272);
+		map_rect[15][1].SetRect(567 - ((mode == 3) || (mode == 1))*POSIT, 305, 737 - ((mode == 3) || (mode == 1))*POSIT, 535);
+		map_rect[15][2].SetRect(756 - ((mode == 3) || (mode == 1))*POSIT, 296, 912 - ((mode == 3) || (mode == 1))*POSIT, 564);
+		map_rect[15][3].SetRect(920 - ((mode == 3) || (mode == 1))*POSIT, 286, 1103 - ((mode == 3) || (mode == 1))*POSIT, 570);
 		break;
 	case 11:
-		//	num_towns = 2;                           //광주
+		//   num_towns = 2;                           //광주
 		map_rect[11][0].SetRect(540 - ((mode == 3) || (mode == 1))*POSIT, 156, 844 - ((mode == 3) || (mode == 1))*POSIT, 534);
 		map_rect[11][1].SetRect(853 - ((mode == 3) || (mode == 1))*POSIT, 155, 1106 - ((mode == 3) || (mode == 1))*POSIT, 528);
 		break;
 	case 12:
-		//	num_towns = 4;                           //경상남도
+		//   num_towns = 4;                           //경상남도
 		map_rect[12][0].SetRect(544 - ((mode == 3) || (mode == 1))*POSIT, 186, 678 - ((mode == 3) || (mode == 1))*POSIT, 613);
 		map_rect[12][1].SetRect(690 - ((mode == 3) || (mode == 1))*POSIT, 157, 935 - ((mode == 3) || (mode == 1))*POSIT, 362);
 		map_rect[12][2].SetRect(690 - ((mode == 3) || (mode == 1))*POSIT, 384, 937 - ((mode == 3) || (mode == 1))*POSIT, 611);
 		map_rect[12][3].SetRect(949 - ((mode == 3) || (mode == 1))*POSIT, 216, 1114 - ((mode == 3) || (mode == 1))*POSIT, 433);
 		break;
 	case 13:
-		//	num_towns = 2;                           //울산
+		//   num_towns = 2;                           //울산
 		map_rect[13][0].SetRect(525 - ((mode == 3) || (mode == 1))*POSIT, 163, 849 - ((mode == 3) || (mode == 1))*POSIT, 596);
 		map_rect[13][1].SetRect(859 - ((mode == 3) || (mode == 1))*POSIT, 161, 1060 - ((mode == 3) || (mode == 1))*POSIT, 597);
 		break;
 	case 14:
-		//	num_towns = 2;                           //부산
+		//   num_towns = 2;                           //부산
 		map_rect[14][0].SetRect(541 - ((mode == 3) || (mode == 1))*POSIT, 308, 815 - ((mode == 3) || (mode == 1))*POSIT, 610);//사상구
 		map_rect[14][1].SetRect(839 - ((mode == 3) || (mode == 1))*POSIT, 129, 1035 - ((mode == 3) || (mode == 1))*POSIT, 425);//기장군
 		break;
-	case 15:
-		//	num_towns = 4;                           //전라북도
-		map_rect[15][0].SetRect(564 - ((mode == 3) || (mode == 1))*POSIT, 253, 757 - ((mode == 3) || (mode == 1))*POSIT, 570);//목포
-		map_rect[15][1].SetRect(773 - ((mode == 3) || (mode == 1))*POSIT, 146, 999 - ((mode == 3) || (mode == 1))*POSIT, 323);//담양
-		map_rect[15][2].SetRect(773 - ((mode == 3) || (mode == 1))*POSIT, 363, 995 - ((mode == 3) || (mode == 1))*POSIT, 582);//장흥
-		map_rect[15][3].SetRect(1012 - ((mode == 3) || (mode == 1))*POSIT, 189, 1145 - ((mode == 3) || (mode == 1))*POSIT, 240);//광양
+	case 10:
+		//   num_towns = 4;                           
+		map_rect[10][0].SetRect(564 - ((mode == 3) || (mode == 1))*POSIT, 253, 757 - ((mode == 3) || (mode == 1))*POSIT, 570);//목포
+		map_rect[10][1].SetRect(773 - ((mode == 3) || (mode == 1))*POSIT, 146, 999 - ((mode == 3) || (mode == 1))*POSIT, 323);//담양
+		map_rect[10][2].SetRect(773 - ((mode == 3) || (mode == 1))*POSIT, 363, 995 - ((mode == 3) || (mode == 1))*POSIT, 582);//장흥
+		map_rect[10][3].SetRect(1012 - ((mode == 3) || (mode == 1))*POSIT, 189, 1145 - ((mode == 3) || (mode == 1))*POSIT, 240);//광양
 		break;
 	case 16:
-		//	num_towns = 4;                           //제주도
+		//   num_towns = 4;                           //제주도
 		map_rect[16][0].SetRect(526 - ((mode == 3) || (mode == 1))*POSIT, 252, 699 - ((mode == 3) || (mode == 1))*POSIT, 564); //한경명
-																															   //	map_rect[16][1].SetRect(712 -((mode == 3)||(mode == 1))*POSIT, 251, 839 -((mode == 3)||(mode == 1))*POSIT, 562); //안덕면
+																															   //   map_rect[16][1].SetRect(712 -((mode == 3)||(mode == 1))*POSIT, 251, 839 -((mode == 3)||(mode == 1))*POSIT, 562); //안덕면
 		map_rect[16][1].SetRect(848 - ((mode == 3) || (mode == 1))*POSIT, 245, 963 - ((mode == 3) || (mode == 1))*POSIT, 554); //성산읍
-																															   //	map_rect[16][3].SetRect(971 -((mode == 3)||(mode == 1))*POSIT, 237, 1128 -((mode == 3)||(mode == 1))*POSIT, 554);//우도
+																															   //   map_rect[16][3].SetRect(971 -((mode == 3)||(mode == 1))*POSIT, 237, 1128 -((mode == 3)||(mode == 1))*POSIT, 554);//우도
 		break;
 		//   case 17:
 		//      num_towns = 4;
@@ -386,7 +386,7 @@ int KBJ::Set_Towns(int map_status)
 	}
 	return 0;
 }
-int KBJ::Get_Town_Address_Cord()
+int KBJ::Get_Town_Address_Cord()//Address.dat 파일을 이용하여 도시동 코드로부터 주소값을 얻는 함수
 {
 
 	CString dat_name = _T("Address.dat"); //실행파일이 있는곳에 좌측의 이름으로 dat파일이 존재해야함. 
@@ -424,7 +424,7 @@ int KBJ::Get_Town_Address_Cord()
 	setlocale(LC_ALL, pOldLocale);
 	return 0;
 }
-void KBJ::enroll_weather()                                    // 도시동 코드 로딩. 
+void KBJ::enroll_weather()// 도시동 코드 로딩. 
 {
 	if (map_status == 0)
 	{//전도

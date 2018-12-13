@@ -38,12 +38,12 @@
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
@@ -187,7 +187,6 @@
   <ItemGroup>
     <ClInclude Include="DialogSetting.h" />
     <ClInclude Include="MainFrm.h" />
-    <ClInclude Include="PictureEx.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -199,7 +198,6 @@
   <ItemGroup>
     <ClCompile Include="DialogSetting.cpp" />
     <ClCompile Include="MainFrm.cpp" />
-    <ClCompile Include="PictureEx.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -218,9 +216,34 @@
     <None Include="res\Weather.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\1-1.bmp" />
+    <Image Include="res\1-2.bmp" />
+    <Image Include="res\1-3.bmp" />
+    <Image Include="res\2-1.bmp" />
+    <Image Include="res\2-2.bmp" />
+    <Image Include="res\2-3.bmp" />
+    <Image Include="res\3-1.bmp" />
+    <Image Include="res\3-2.bmp" />
+    <Image Include="res\3-3.bmp" />
+    <Image Include="res\4-1.bmp" />
+    <Image Include="res\4-2.bmp" />
+    <Image Include="res\4-3.bmp" />
+    <Image Include="res\5-1.bmp" />
+    <Image Include="res\5-2.bmp" />
+    <Image Include="res\5-3.bmp" />
+    <Image Include="res\6-1.bmp" />
+    <Image Include="res\6-2.bmp" />
+    <Image Include="res\6-3.bmp" />
+    <Image Include="res\7-1.bmp" />
+    <Image Include="res\7-2.bmp" />
+    <Image Include="res\7-3.bmp" />
+    <Image Include="res\Cloudy.bmp" />
+    <Image Include="res\Littlecloud.bmp" />
     <Image Include="res\main_show.bmp" />
     <Image Include="res\mode2.bmp" />
     <Image Include="res\setting.bmp" />
+    <Image Include="res\SUN1.bmp" />
+    <Image Include="res\SUN2.bmp" />
     <Image Include="res\Toolbar.bmp" />
     <Image Include="res\Weather.ico" />
     <Image Include="res\WeatherDoc.ico" />
@@ -234,6 +257,7 @@
     <Image Include="res\대한민국 전도.bmp" />
     <Image Include="res\부산.bmp" />
     <Image Include="res\서울.bmp" />
+    <Image Include="res\아이콘.ico" />
     <Image Include="res\울산.bmp" />
     <Image Include="res\인천.bmp" />
     <Image Include="res\전라남도.bmp" />

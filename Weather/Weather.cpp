@@ -58,7 +58,6 @@ BOOL CWeatherApp::InitInstance()
 	EnableTaskbarInteraction(FALSE);
 
 	// RichEdit 컨트롤을 사용하려면  AfxInitRichEdit2()가 있어야 합니다.	
-	// AfxInitRichEdit2();
 
 	// 표준 초기화
 	// 이들 기능을 사용하지 않고 최종 실행 파일의 크기를 줄이려면
@@ -102,20 +101,18 @@ BOOL CWeatherApp::InitInstance()
 	KBJ ab;
 	for (int i = 0; i <= 16; i++)
 		ab.Set_Towns(i);
-//====================================	
+
 	cs.Lock();
 	KBJ kbj;
 	kbj.Get_Coordinates_From_Dat();
 	kbj.Get_Town_Address_Cord();
 	kbj.enroll_weather();
 
-
-
 	pThread = AfxBeginThread(Update_Info_Work_Thread, NULL, THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
 	pThread->m_bAutoDelete = FALSE;
 	cs.Unlock();
 	pThread->ResumeThread();
-
+//====================================	
 	return TRUE;
 }
 

@@ -3,9 +3,8 @@
 //
 
 #pragma once
-#include "PictureEx.h"
 
-
+UINT Moving_Bmp(LPVOID param);
 class CWeatherView : public CFormView
 {
 protected: // serialization에서만 만들어집니다.
@@ -21,18 +20,26 @@ public:
 public:
 	CWeatherDoc* GetDocument() const;
 
-// 작업입니다.
-public:
+//****************************************************************************
+public: //함수
 	int Show_Town_Main();
-	int Animation_Bmp();
 	int Print_map(int);
 	int Map_into(int map_status);
 	int Show_Temp_Map();
-	void Animation(int index, CPoint point);
-	void enroll_weather();
 	town_cord Syncdata(CRect m_rect);
 	int Show_Tooltip(int m_status, CPoint point);
-// 재정의입니다.
+	int Print_Unvisible_Bmp(int x, int y, CPaintDC &dc, int R_id);
+	int Print_All_Moving_Bmp(CPaintDC &dc);
+	int CWeatherView::Print_Unvisible_Bmp(int x, int y, CDC* &cdc, int R_id);
+public: //변수 
+	int M_button_down;
+	int M_button_up;
+	CPoint down;
+	CPoint Up;
+	int key_flag;
+	int tooltip_flag;
+//****************************************************************************
+
 public:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 protected:
@@ -57,35 +64,13 @@ public:
 
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
-//	virtual BOOL Create(LPCTSTR lpszClassName, LPCTSTR lpszWindowName, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext = NULL);
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	virtual void OnUpdate(CView* /*pSender*/, LPARAM /*lHint*/, CObject* /*pHint*/);
-	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
-//	afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
-	int M_button_down;
-	int M_button_up;
-	CPoint down;
-	CPoint Up;
-//	afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
-//	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
-	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
-	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
-	int key_flag;
+	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);	
 	CToolTipCtrl* m_pToolTip;
 	afx_msg void OnDestroy();
-	CPictureEx m_Picture0;
-	CPictureEx m_Picture1;
-	CPictureEx m_Picture2;
-	CPictureEx m_Picture3;
-	CPictureEx m_Picture4;
-	CPictureEx m_Picture5;
-	CPictureEx m_Picture6;
-
-//	afx_msg void OnSetFocus(CWnd* pOldWnd);
-//	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
-	int tooltip_flag;
 };
 
 #ifndef _DEBUG  // WeatherView.cpp의 디버그 버전

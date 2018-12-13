@@ -68,7 +68,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDR_MAINFRAME           ICON                    "res\\Weather.ico"
+IDR_MAINFRAME           ICON                    "res\\아이콘.ico"
 
 IDR_WeatherTYPE         ICON                    "res\\WeatherDoc.ico"
 
@@ -120,6 +120,52 @@ IDB_NALSSI              BITMAP                  "res\\main_show.bmp"
 
 IDB_BITMAP3             BITMAP                  "res\\setting.bmp"
 
+IDB_CLOUDY              BITMAP                  "res\\Cloudy.bmp"
+
+IDB_LCLOUD              BITMAP                  "res\\Littlecloud.bmp"
+
+IDB_SUNNY               BITMAP                  "res\\1-1.bmp"
+
+IDB_SCLOUD_1            BITMAP                  "res\\2-1.bmp"
+
+IDB_SCLOUD_2            BITMAP                  "res\\2-2.bmp"
+
+IDB_SCLOUD_3            BITMAP                  "res\\2-3.bmp"
+
+IDB_MCLOUD_1            BITMAP                  "res\\3-1.bmp"
+
+IDB_MCLOUD_2            BITMAP                  "res\\3-2.bmp"
+
+IDB_MCLOUD3             BITMAP                  "res\\3-3.bmp"
+
+IDB_CLOUD_1             BITMAP                  "res\\4-1.bmp"
+
+IDB_CLOUD_2             BITMAP                  "res\\4-2.bmp"
+
+IDB_CLOUD_3             BITMAP                  "res\\4-3.bmp"
+
+IDB_RAIN_1              BITMAP                  "res\\5-1.bmp"
+
+IDB_RAIN_2              BITMAP                  "res\\5-2.bmp"
+
+IDB_RAIN_3              BITMAP                  "res\\5-3.bmp"
+
+IDB_SNOWRAIN_1          BITMAP                  "res\\6-1.bmp"
+
+IDB_SNOWRAIN_2          BITMAP                  "res\\6-2.bmp"
+
+IDB_SNOWRAIN_3          BITMAP                  "res\\6-3.bmp"
+
+IDB_SNOW_1              BITMAP                  "res\\7-1.bmp"
+
+IDB_SNOW_2              BITMAP                  "res\\7-2.bmp"
+
+IDB_SNOW_3              BITMAP                  "res\\7-3.bmp"
+
+IDB_SUNNY2              BITMAP                  "res\\1-2.bmp"
+
+IDB_SUNNY3              BITMAP                  "res\\1-3.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -152,8 +198,8 @@ BEGIN
     BEGIN
         MENUITEM "Weather 정보(&A)...",           ID_APP_ABOUT
         MENUITEM SEPARATOR
-        MENUITEM "끝내기(&X)",                     ID_APP_EXIT
         MENUITEM "사용자설정",                       ID_32771
+        MENUITEM "끝내기(&X)",                     ID_APP_EXIT
     END
     MENUITEM "도움말(&H)",                     65535
 END
@@ -202,13 +248,6 @@ IDD_WEATHER_FORM DIALOGEX 0, 0, 762, 404
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
 FONT 9, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_PICTURE0,"Static",SS_BLACKFRAME,7,3,20,20
-    CONTROL         "",IDC_PICTURE1,"Static",SS_BLACKFRAME,27,3,20,20
-    CONTROL         "",IDC_PICTURE2,"Static",SS_BLACKFRAME,46,3,20,20
-    CONTROL         "",IDC_PICTURE3,"Static",SS_BLACKFRAME,66,3,20,20
-    CONTROL         "",IDC_PICTURE4,"Static",SS_BLACKFRAME,86,3,20,20
-    CONTROL         "",IDC_PICTURE5,"Static",SS_BLACKFRAME,105,3,20,20
-    CONTROL         "",IDC_PICTURE6,"Static",SS_BLACKFRAME,125,3,20,20
 END
 
 IDD_DIALOG1 DIALOGEX 0, 0, 311, 113

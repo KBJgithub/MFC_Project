@@ -32,11 +32,17 @@ extern int num_towns;
 extern std::vector<town_cord> towns; //날씨정보 업데이트 스레드와 공유할 전역변수.
 extern int wakeup_thread;
 extern CWinThread* pThread;
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#define RATIO 1.27
-#endif
+extern POINT moving_images_pos[30];
+extern CWinThread* bmp_Thread;
+extern int moving_images_num;
+extern u_int user_do;
+extern u_int user_si;
+extern u_int user_dong;
+extern u_int update;
 
+int cnt_bmp = 0;
+
+#define RATIO 1.27
 
 
 // CWeatherView
@@ -52,8 +58,6 @@ BEGIN_MESSAGE_MAP(CWeatherView, CFormView)
 	ON_WM_DESTROY()
 ON_WM_KEYUP()
 ON_WM_KEYDOWN()
-//ON_WM_SETFOCUS()
-//ON_WM_SETFOCUS()
 ON_WM_MOUSEMOVE()
 END_MESSAGE_MAP()
 
@@ -77,13 +81,6 @@ CWeatherView::~CWeatherView()
 void CWeatherView::DoDataExchange(CDataExchange* pDX)
 {
 	CFormView::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_PICTURE0, m_Picture0);
-	DDX_Control(pDX, IDC_PICTURE1, m_Picture1);
-	DDX_Control(pDX, IDC_PICTURE2, m_Picture2);
-	DDX_Control(pDX, IDC_PICTURE3, m_Picture3);
-	DDX_Control(pDX, IDC_PICTURE4, m_Picture4);
-	DDX_Control(pDX, IDC_PICTURE5, m_Picture5);
-	DDX_Control(pDX, IDC_PICTURE6, m_Picture6);
 }
 
 
@@ -98,8 +95,15 @@ BOOL CWeatherView::PreCreateWindow(CREATESTRUCT& cs)
 	CString str_DialogSi = _T("m_DialogSi");
 	CString str_DialogDong = _T("m_DialogDong");
 	CString str_DialogUpdate = _T("m_DialogUpdate");
+	CString str_DialogDostr = _T("DialogDoStr");
+	CString str_DialogDoSistr = _T("DialogSiStr");
+	CString str_DialogDongstr = _T("DialogDongStr");
+	CString Dialog_CordDo = _T("Dialog_CordDo");
+	CString Dialog_CordSi = _T("Dialog_CordSi");
+	CString Dialog_CordDong = _T("Dialog_CordDong");
 
 	CWinApp* pApp = AfxGetApp();
+
 
 	AfxDialogSetting.m_DialogFix = pApp->GetProfileInt(strSection, str_DialogFix, 9999);
 	AfxDialogSetting.m_DialogMode = pApp->GetProfileInt(strSection, str_DialogMode, 9999);
@@ -107,8 +111,65 @@ BOOL CWeatherView::PreCreateWindow(CREATESTRUCT& cs)
 	AfxDialogSetting.m_DialogSi = pApp->GetProfileInt(strSection, str_DialogSi, 9999);
 	AfxDialogSetting.m_DialogDong = pApp->GetProfileInt(strSection, str_DialogDong, 9999);
 	AfxDialogSetting.m_DialogUpdate = pApp->GetProfileInt(strSection, str_DialogUpdate, 9999);
+	AfxDialogSetting.Dialog_strDo = pApp->GetProfileString(strSection, str_DialogDostr, _T("error"));
+	AfxDialogSetting.Dialog_strSi = pApp->GetProfileString(strSection, str_DialogDoSistr, _T("error"));
+	AfxDialogSetting.Dialog_strDong = pApp->GetProfileString(strSection, str_DialogDongstr, _T("error"));
+	AfxDialogSetting.m_DialogUpdate = pApp->GetProfileInt(strSection, str_DialogUpdate, 9999);
+	AfxDialogSetting.m_DialogUpdate = pApp->GetProfileInt(strSection, str_DialogUpdate, 9999);
+	AfxDialogSetting.m_DialogUpdate = pApp->GetProfileInt(strSection, str_DialogUpdate, 9999);
+	AfxDialogSetting.Dialog_CordDo = pApp->GetProfileInt(strSection, Dialog_CordDo, 9999);
+	AfxDialogSetting.Dialog_CordSi = pApp->GetProfileInt(strSection, Dialog_CordSi, 9999);
+	AfxDialogSetting.Dialog_CordDong = pApp->GetProfileInt(strSection, Dialog_CordDong, 9999);
+
+	TRACE(_T("fix = %d\n"), AfxDialogSetting.m_DialogFix);
+	TRACE(_T("Mode = %d\n"), AfxDialogSetting.m_DialogMode);
+	TRACE(_T("m_DialogDo = %d\n"), AfxDialogSetting.m_DialogDo);
+	TRACE(_T("m_DialogSi = %d\n"), AfxDialogSetting.m_DialogSi);
+	TRACE(_T("m_DialogDong = %d\n"), AfxDialogSetting.m_DialogDong);
+	TRACE(_T("m_DialogUpdate = %d\n"), AfxDialogSetting.m_DialogUpdate);
+	TRACE(_T("Dialog_strDo = %s\n"), AfxDialogSetting.Dialog_strDo);
+	TRACE(_T("Dialog_strSi = %s\n"), AfxDialogSetting.Dialog_strSi);
+	TRACE(_T("Dialog_strDong = %s\n\n\n"), AfxDialogSetting.Dialog_strDong);
+	if (
+		AfxDialogSetting.m_DialogFix == 9999 ||
+		AfxDialogSetting.m_DialogMode == 9999 ||
+		AfxDialogSetting.m_DialogDo == 9999 ||
+		AfxDialogSetting.m_DialogSi == 9999 ||
+		AfxDialogSetting.m_DialogDong == 9999 ||
+		AfxDialogSetting.m_DialogUpdate == 9999 ||
+		AfxDialogSetting.Dialog_strDo == "error" ||
+		AfxDialogSetting.Dialog_strSi == "error" ||
+		AfxDialogSetting.Dialog_strDong == "error" ||
+		AfxDialogSetting.Dialog_CordDo == 9999 ||
+		AfxDialogSetting.Dialog_CordSi == 9999 ||
+		AfxDialogSetting.Dialog_CordDong == 9999)
+	{
+		TRACE(_T("레지스트리 입력 안될 경우"));
+		AfxDialogSetting.m_DialogFix = 0;
+		AfxDialogSetting.m_DialogMode = 0;
+		AfxDialogSetting.m_DialogDo = 0;
+		AfxDialogSetting.m_DialogSi = 0;
+		AfxDialogSetting.m_DialogDong = 0;
+		AfxDialogSetting.Dialog_CordDo = 1;
+		AfxDialogSetting.Dialog_CordSi = 1;
+		AfxDialogSetting.Dialog_CordDong = 1;
+		AfxDialogSetting.m_DialogUpdate = 0;
+		AfxDialogSetting.Dialog_strDo = _T("서울특별시");
+		AfxDialogSetting.Dialog_strSi = _T("서울특별시");
+		AfxDialogSetting.Dialog_strDong = _T("서울특별시");
+		AfxDialogSetting.Dialog_CordDo = 1;
+		AfxDialogSetting.Dialog_CordSi = 1;
+		AfxDialogSetting.Dialog_CordDo = 1;
+	}
 
 
+	mode = AfxDialogSetting.m_DialogMode + 1;
+	user_do = AfxDialogSetting.Dialog_CordDo;
+	user_si = AfxDialogSetting.Dialog_CordSi;
+	user_dong = AfxDialogSetting.Dialog_CordDong;
+	update = AfxDialogSetting.m_DialogUpdate + 1;
+	AfxDialogSetting.m_DialogFix = 0;
+	fix = AfxDialogSetting.m_DialogFix;
 	return TRUE;
 }
 
@@ -120,18 +181,47 @@ void CWeatherView::OnInitialUpdate()
 
 
 	CPoint point(100, 200);
-	Animation(0, point);
-
-
-	m_pToolTip = new CToolTipCtrl;
+	//****************************************************
+	//툴팁 초기화
+	m_pToolTip = new CToolTipCtrl; 
 	m_pToolTip->Create(this, TTS_ALWAYSTIP | TTS_NOPREFIX);
 	m_pToolTip->SetDelayTime(500);
 	m_pToolTip->SetMaxTipWidth(170);
 	m_pToolTip->Activate(FALSE);
-
+	//****************************************************
+	//에니메이션용 work thread 생성
+	bmp_Thread = AfxBeginThread(Moving_Bmp, NULL, THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
+	bmp_Thread->m_bAutoDelete = FALSE;
+	bmp_Thread->ResumeThread();
+	//****************************************************
+	//레지스트리에 있던 정보 또는 초기값으로 설정하기
 	CSize scrollSize(0, 0);
 	SetScrollSizes(MM_TEXT, scrollSize);
+	KBJ k;
 
+	if (mode == 1)
+	{
+		AfxGetMainWnd()->MoveWindow(0, 0, 700, 700, 1);
+		AfxGetMainWnd()->Invalidate(1);
+		POSIT = 470;
+		k.Set_Towns(map_status);
+	}
+	else if (mode == 2)
+	{
+		AfxGetMainWnd()->MoveWindow(0, 0, 920, 327, 1);
+		mode2_x = 0;
+		mode2_y = 0;
+
+	}
+	else if (mode == 3)
+	{
+		AfxGetMainWnd()->MoveWindow(0, 0, 1640, 700, 1);
+		POSIT = 470;
+		k.Set_Towns(map_status);
+		mode2_x = 700;
+		mode2_y = 220;
+	}
+	//****************************************************
 }
 
 
@@ -162,39 +252,39 @@ void CWeatherView::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
 					   // TODO: 여기에 메시지 처리기 코드를 추가합니다.
-
-	if (update_flag == 1)
-	{
-		cs.Lock();
-		if (mode == 1 || mode == 3)
+	 if( mode != 2)
+		Print_map(map_status);	//mode2가 아니면 지도를 출력한다.
+	
+		if (update_flag == 1) //데이터가 업데이트가 되었으면 
 		{
-			Print_map(map_status);
-			dc.SelectStockObject(NULL_BRUSH);
-			for (int loop = 0; loop < 16; loop++)
-			{
-				dc.Rectangle(map_rect[map_status][loop]);
+			cs.Lock();
+			if (mode == 1 || mode == 3) //지도에 온도를 출력한다.
+			{	
+				Show_Temp_Map();
 			}
-			Show_Temp_Map();
+			if (mode == 2 || mode == 3)//사용자가 주목하는 곳의 온도를 표로 출력한다.
+				Show_Town_Main();
+			tooltip_flag = 1;
+			cs.Unlock();
 		}
-		if (mode == 2 || mode == 3)
-			Show_Town_Main();
-		//update_flag = 0;
-		tooltip_flag = 1;
-		cs.Unlock();
-	}	
+
+	if (mode == 1 || mode == 3)	Print_All_Moving_Bmp(dc); //지도에 애니메이션을 출력한다. 
+	
 				   // 그리기 메시지에 대해서는 CFormView::OnPaint()을(를) 호출하지 마십시오.
 }
 
-int CWeatherView::Show_Town_Main()
+int CWeatherView::Show_Town_Main() //사용자가 주목하는 주소를 표시하는 표
 {
 	CDC *cdc = GetDC();
+	int tem;
+	int rain;
 	cs.Lock();
 	if ((mode == 2 || mode == 3))
 	{
 		CBitmap mode2;
 		mode2.LoadBitmap(IDB_NALSSI);
 		BITMAP bmpinfo;
-		int x_shift,x_dis,y_shift,y_dis;
+		int x_shift,x_dis,y_shift,y_dis, x_shift_bmp, y_shift_bmp,x_dis_bmp;
 		mode2.GetBitmap(&bmpinfo);
 		CDC dcmem;
 		dcmem.CreateCompatibleDC(cdc);
@@ -208,22 +298,154 @@ int CWeatherView::Show_Town_Main()
 		x_dis = 77;
 		y_shift = 160;
 		y_dis = 30;
+		x_shift_bmp = 90; 
+		y_shift_bmp = -70;
+		x_dis_bmp = 23;
 		font.CreatePointFont(100, _T("휴먼매직체"));
 		cdc->SelectObject(&font);
 		cdc->SetTextColor(RGB(100, 100, 100));
 
-		CString strDate, strTime, hour; // 반환되는 날짜와 시간을 저장할 CString 변수 선언
+		CString strDate, strTime, hour, strDo, strSi, strDong, strInfo; // 반환되는 날짜와 시간을 저장할 CString 변수 선언
+
+		strDo = AfxDialogSetting.Dialog_strDo;
+		strSi = AfxDialogSetting.Dialog_strSi;
+		strDong = AfxDialogSetting.Dialog_strDong;
 		strDate.Format(_T("%04d년 %02d월 %02d일"), cTime.GetYear(), // 현재 년도 반환
 			cTime.GetMonth(), // 현재 월 반환
 			cTime.GetDay()); // 현재 일 반환
-		strTime.Format(_T("%02d시 %02d분 %02d초"), cTime.GetHour(), // 현재 시간 반환
+		strTime.Format(_T("%02d시 %02d분"), cTime.GetHour(), // 현재 시간 반환
 			cTime.GetMinute(), // 현재 분 반환
 			cTime.GetSecond()); // 현재 초 반환
-		cdc->TextOut(mode2_x + 470, mode2_y + 10, strDate);
-		cdc->TextOut(mode2_x + 590, mode2_y + 10, strTime);
-		cdc->SetBkMode(TRANSPARENT);
+		strInfo.Format(_T("%s %s %s %s %s"), strDo, strSi, strDong, strDate, strTime);
+		cdc->TextOut(mode2_x + 300, mode2_y + 10, strInfo);
 		for (int loop = 0; loop < 11; loop++)
-		{
+		{			
+			tem = info[index[0]].sky[loop];			
+			rain = info[index[0]].pty[loop];
+			if (rain == 0) 
+			{
+				if (cnt_bmp == 0) 
+				{
+					if (tem == 1)
+					{
+						Print_Unvisible_Bmp(mode2_x+ x_shift_bmp + (x_shift-x_dis_bmp)*loop, mode2_y + y_shift+y_shift_bmp, cdc, IDB_SUNNY);
+					}
+					else if (tem == 2)
+					{
+						Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop+ x_shift_bmp, mode2_y + y_shift+ y_shift_bmp, cdc, IDB_SCLOUD_1);
+					}
+					else if (tem == 3)
+					{
+						Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_MCLOUD_1);
+
+					}
+					else if (tem == 4)
+					{
+						Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_CLOUD_1);
+					}
+				}
+				if (cnt_bmp == 1) {
+					if (tem == 1)
+					{
+						Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_SUNNY2);
+					}
+					else if (tem == 2)
+					{
+						Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_SCLOUD_2);
+
+					}
+					else if (tem == 3)
+					{
+						Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_MCLOUD_2);
+					}
+					else if (tem == 4)
+					{
+						Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_CLOUD_2);
+					}
+				}
+				if (cnt_bmp == 2) {
+					if (tem == 1)
+					{
+						Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_SUNNY3);
+					}
+					else if (tem == 2)
+					{
+
+						Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_SCLOUD_3);
+						//Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SUN1);
+					}
+					else if (tem == 3)
+					{
+
+						Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_MCLOUD3);
+						//Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SUN1);
+					}
+					else if (tem == 4)
+					{
+						Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_CLOUD_3);
+						//Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SUN1);
+					}
+				}
+			}
+			else if (rain == 1) 
+			{
+				if (cnt_bmp == 0) 
+				{
+					Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_RAIN_1);
+				}
+				if (cnt_bmp == 1) 
+				{
+					Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_RAIN_2);
+				}
+				if (cnt_bmp == 2) {
+
+					Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_RAIN_3);
+
+				}
+			}
+			else if (rain == 2) {
+				if (cnt_bmp == 0) {
+
+					Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_SNOWRAIN_1);
+
+				}
+				if (cnt_bmp == 1) {
+
+
+					Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_SNOWRAIN_2);
+
+
+				}
+				if (cnt_bmp == 2) {
+
+					Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_SNOWRAIN_3);
+
+				}
+			}
+			else if (rain == 3) {
+				if (cnt_bmp == 0) {
+
+					Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_SNOW_1);
+
+				}
+				if (cnt_bmp == 1) {
+
+
+					Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_SNOW_2);
+
+
+				}
+				if (cnt_bmp == 2) {
+
+					Print_Unvisible_Bmp(mode2_x + (x_shift - x_dis_bmp)*loop + x_shift_bmp, mode2_y + y_shift + y_shift_bmp, cdc, IDB_SNOW_3);
+
+				}
+			}
+		
+	
+
+
+
 			hour.Format(_T("%d시"), (cTime.GetHour() + 3 * loop) % 24);
 			cdc->TextOut(mode2_x + x_shift + x_dis * loop , mode2_y + 65 , hour);
 			hour.Format(_T("%.1f"), info[index[0]].temp[loop].tmp);
@@ -254,16 +476,9 @@ int CWeatherView::Show_Town_Main()
 	ReleaseDC(cdc);
 	return 0;
 }
-int CWeatherView::Animation_Bmp()
-{
-	//날씨 아이콘을 현재 animation_status에따라서
-	//3가지 비트맵을 정해진 위치에 계속 지우고 다시 그려주는 과정이 필요함.
-	//지우는 과정은 work thread에서 해주니까
-	//bmp다시 그리는 과정만 들어가면 됨.
 
-	return 0;
-}
-int CWeatherView::Print_map(int map_sta)
+
+int CWeatherView::Print_map(int map_sta) //각 상황에 맞는 지도 출력
 {
 	CClientDC dc(this);
 	CRect crt;
@@ -294,7 +509,7 @@ int CWeatherView::Print_map(int map_sta)
 	case 9:
 		bitmap.LoadBitmap(IDB_DEAGU); break;
 	case 10:
-		bitmap.LoadBitmap(IDB_JEONNAM); break;
+		bitmap.LoadBitmap(IDB_JEONBUK); break;
 	case 11:
 		bitmap.LoadBitmap(IDB_GWANGJU); break;
 	case 12:
@@ -304,11 +519,11 @@ int CWeatherView::Print_map(int map_sta)
 	case 14:
 		bitmap.LoadBitmap(IDB_BUSAN); break;
 	case 15:
-		bitmap.LoadBitmap(IDB_JEONBUK); break;
+		bitmap.LoadBitmap(IDB_JEONNAM); break;
 	case 16:
 		bitmap.LoadBitmap(IDB_JEJU); break;
 	default:
-		AssertValid(); break;
+		 break;
 	}
 	BITMAP bmpinfo;
 	bitmap.GetBitmap(&bmpinfo);
@@ -316,10 +531,11 @@ int CWeatherView::Print_map(int map_sta)
 	CDC dcmem;
 	dcmem.CreateCompatibleDC(&dc);
 	dcmem.SelectObject(bitmap);
-	dc.StretchBlt(527-POSIT, 20, bmpinfo.bmWidth*RATIO, bmpinfo.bmHeight*RATIO, &dcmem, 0, 0, bmpinfo.bmWidth, bmpinfo.bmHeight, SRCCOPY);
+	dc.StretchBlt(527 - POSIT, 20, (int)(bmpinfo.bmWidth*RATIO), (int)(bmpinfo.bmHeight*RATIO), &dcmem, 0, 0, bmpinfo.bmWidth, bmpinfo.bmHeight, SRCCOPY);
 	return map_status;
 }
-int CWeatherView::Map_into(int map_sta)
+
+int CWeatherView::Map_into(int map_sta) //마우스의 클릭으로 전도 --> 도수준의 지도로 들어가 설정을 바꾸는 함수
 {
 	CRect Back(457 - (mode / 3)*POSIT, 20, 527 - (mode / 3)*POSIT, 90);
 	CPoint point;
@@ -329,67 +545,51 @@ int CWeatherView::Map_into(int map_sta)
 	if (map_sta == 0) {
 		if (map_rect[0][0].PtInRect(point)) {   // 서울
 			map_status = 1;
-			//Invalidate();
 		}
 		else if (map_rect[0][8].PtInRect(point) && (!(map_rect[0][1].PtInRect(point) || map_rect[0][9].PtInRect(point)))) {
 			map_status = 2;
-			//Invalidate();
 		}
 		else if (map_rect[0][9].PtInRect(point)) {
 			map_status = 3;
-			//Invalidate();
 		}
 		else if (map_rect[0][5].PtInRect(point)) {
 			map_status = 4;
-			//Invalidate();
 		}
-		else if (map_rect[0][16].PtInRect(point) && (!(map_rect[0][3].PtInRect(point)))) {
+		else if (map_rect[0][13].PtInRect(point) && (!(map_rect[0][3].PtInRect(point)))) {		//전라남도 
 			map_status = 15;
-			//Invalidate();
 		}
 		else if (map_rect[0][10].PtInRect(point)) {
 			map_status = 5;
-			//Invalidate();
 		}
 		else if (map_rect[0][4].PtInRect(point)) {
 			map_status = 6;
-			//Invalidate();
 		}
 		else if (map_rect[0][11].PtInRect(point)) {
 			map_status = 7;
-			//Invalidate();
 		}
 		else if (map_rect[0][3].PtInRect(point)) {
 			map_status = 11;
-			//Invalidate();
 		}
 		else if (map_rect[0][7].PtInRect(point) || map_rect[0][12].PtInRect(point)) {
 			map_status = 8;
-			//Invalidate();
 		}
 		else if (map_rect[0][2].PtInRect(point)) {      //대구   
 			map_status = 9;
-			//Invalidate();
 		}
-		else if (map_rect[0][13].PtInRect(point)) {      //전라북도   
+		else if (map_rect[0][16].PtInRect(point)) {      //전라북도  
 			map_status = 10;
-			//Invalidate();
 		}
 		else if (map_rect[0][14].PtInRect(point)) {
 			map_status = 12;
-			//Invalidate();
 		}
 		else if (map_rect[0][15].PtInRect(point)) {
 			map_status = 13;
-			//Invalidate();
 		}
 		else if (map_rect[0][1].PtInRect(point)) {
 			map_status = 14;
-			//Invalidate();
 		}
 		else if (map_rect[0][6].PtInRect(point)) {
 			map_status = 16;
-			//Invalidate();
 		}
 		else return 0;
 	}
@@ -397,7 +597,7 @@ int CWeatherView::Map_into(int map_sta)
 	k.enroll_weather();
 	return 1;
 }
-void CWeatherView::OnLButtonDown(UINT nFlags, CPoint point)
+void CWeatherView::OnLButtonDown(UINT nFlags, CPoint point) //마우스 왼쪽버튼 누를 때 핸들러
 {
 	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
 
@@ -408,8 +608,8 @@ void CWeatherView::OnLButtonDown(UINT nFlags, CPoint point)
 	}
 	else if (mode == 1 || mode == 3)
 	{
-		if (Map_into(map_status))
-		{
+		if (Map_into(map_status)) //정해진 사각형을 적절하게 클릭했으면
+		{                         //업데이트를 새롭게 한다. 
 			cs.Lock();
 			update_flag = 0;
 			tooltip_flag = 0;
@@ -419,17 +619,16 @@ void CWeatherView::OnLButtonDown(UINT nFlags, CPoint point)
 			pThread = AfxBeginThread(Update_Info_Work_Thread, NULL, THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
 			pThread->m_bAutoDelete = FALSE;
 			pThread->ResumeThread();
-		//	wakeup_thread = 1;
 			cs.Unlock();
 		}
 	}	
 	CFormView::OnLButtonDown(nFlags, point);
 }
-void CWeatherView::OnRButtonDown(UINT nFlags, CPoint point)
+void CWeatherView::OnRButtonDown(UINT nFlags, CPoint point) //오른쪽 마우스 버튼 클릭 핸들러
 {
 	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
 
-	if (map_status != 0)
+	if (map_status != 0) //현재 상황이 전도가 아니라면 전도로 빠져나옵니다. 
 	{
 		if (mode == 1 || mode == 3)
 		{
@@ -453,14 +652,26 @@ void CWeatherView::OnRButtonDown(UINT nFlags, CPoint point)
 	CFormView::OnRButtonDown(nFlags, point);
 }
 
-void CWeatherView::OnMouseMove(UINT nFlags, CPoint point)
+void CWeatherView::OnMouseMove(UINT nFlags, CPoint point) //마우스 이동에 따른 툴팁을 표시하기 위한 핸들러
 {
 	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
 	if (tooltip_flag == 1)
 	{
 		Show_Tooltip(map_status, point);	
 	}
-
+//============================================================================
+	if (map_status == 0) {
+		for (int i = 0; i <= 16; i++) {
+			if (map_rect[0][i].PtInRect(point)) {
+				SetCursor(LoadCursor(NULL, IDC_HAND));
+				break;
+			}
+			else {
+				SetCursor(LoadCursor(NULL, IDC_ARROW));
+			}
+		}
+	}
+//============================================================================ 마우스 손
 	CFormView::OnMouseMove(nFlags, point);
 }
 
@@ -483,7 +694,7 @@ void CWeatherView::OnUpdate(CView* /*pSender*/, LPARAM /*lHint*/, CObject* /*pHi
 	// TODO: 여기에 특수화된 코드를 추가 및/또는 기본 클래스를 호출합니다.
 
 }
-int CWeatherView::Show_Temp_Map()
+int CWeatherView::Show_Temp_Map() //지도 위에 날씨를 표현하는 함수
 {
 	int x, y, distance = 40;
 	CString output;
@@ -569,6 +780,12 @@ void CWeatherView::OnDestroy()
 	CString str_DialogSi = _T("m_DialogSi");
 	CString str_DialogDong = _T("m_DialogDong");
 	CString str_DialogUpdate = _T("m_DialogUpdate");
+	CString str_DialogDostr = _T("DialogDoStr");
+	CString str_DialogDoSistr = _T("DialogSiStr");
+	CString str_DialogDongstr = _T("DialogDongStr");
+	CString Dialog_CordDo = _T("Dialog_CordDo");
+	CString Dialog_CordSi = _T("Dialog_CordSi");
+	CString Dialog_CordDong = _T("Dialog_CordDong");
 
 	CWinApp* pApp = AfxGetApp();
 
@@ -578,73 +795,17 @@ void CWeatherView::OnDestroy()
 	pApp->WriteProfileInt(strSection, str_DialogSi, AfxDialogSetting.m_DialogSi);
 	pApp->WriteProfileInt(strSection, str_DialogDong, AfxDialogSetting.m_DialogDong);
 	pApp->WriteProfileInt(strSection, str_DialogUpdate, AfxDialogSetting.m_DialogUpdate);
+	pApp->WriteProfileString(strSection, str_DialogDostr, AfxDialogSetting.Dialog_strDo);
+	pApp->WriteProfileString(strSection, str_DialogDoSistr, AfxDialogSetting.Dialog_strSi);
+	pApp->WriteProfileString(strSection, str_DialogDongstr, AfxDialogSetting.Dialog_strDong);
+	pApp->WriteProfileInt(strSection, Dialog_CordDo, AfxDialogSetting.Dialog_CordDo);
+	pApp->WriteProfileInt(strSection, Dialog_CordSi, AfxDialogSetting.Dialog_CordSi);
+	pApp->WriteProfileInt(strSection, Dialog_CordDong, AfxDialogSetting.Dialog_CordDong);
 
 	// TODO: 여기에 메시지 처리기 코드를 추가합니다.
 }
 
-void CWeatherView::Animation(int index, CPoint point) {
-	//	CPaintDC dc(this);
-	switch (index) {
-
-	case 0: m_Picture0.MoveWindow(point.x, point.y, 100, 90);
-		m_Picture0.Load(_T("맑음.gif"));
-		m_Picture0.Draw();
-	case 1: m_Picture1.MoveWindow(point.x, point.y, 100, 90);
-		m_Picture1.Load(_T("구름조금.gif"));
-		m_Picture1.Draw();
-	case 2: m_Picture2.MoveWindow(point.x, point.y, 100, 90);
-		m_Picture2.Load(_T("구름많음.gif"));
-		m_Picture2.Draw();
-	case 3: m_Picture3.MoveWindow(point.x, point.y, 100, 90);
-		m_Picture3.Load(_T("흐림.gif"));
-		m_Picture3.Draw();
-	case 4: m_Picture4.MoveWindow(point.x, point.y, 100, 90);
-		m_Picture4.Load(_T("비.gif"));
-		m_Picture4.Draw();
-	case 5: m_Picture5.MoveWindow(point.x, point.y, 100, 90);
-		m_Picture5.Load(_T("눈비.gif"));
-		m_Picture5.Draw();
-	case 6: m_Picture6.MoveWindow(point.x, point.y, 100, 90);
-		m_Picture6.Load(_T("눈.gif"));
-		m_Picture6.Draw();
-	}
-
-	/*
-	m_Picture0.MoveWindow(100, 100, 400, 500);
-
-	if (m_Picture0.Load(_T("res\\눈비.gif")))
-	{
-	m_Picture0.Draw();
-	}
-
-	m_Picture1.MoveWindow(200, 200, 400, 500);
-
-	if (m_Picture1.Load(_T("res\\흐림.gif")))
-	{
-	m_Picture1.Draw();
-	}
-	*/
-}
-
-void CWeatherView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
-{
-	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
-	if (nChar == VK_CONTROL && key_flag != 1)
-		key_flag = 1;
-	CFormView::OnKeyDown(nChar, nRepCnt, nFlags);
-}
-
-
-void CWeatherView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
-{
-	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
-	if (nChar == VK_CONTROL)
-		key_flag = 0;
-	CFormView::OnKeyUp(nChar, nRepCnt, nFlags);
-}
-
-
-BOOL CWeatherView::PreTranslateMessage(MSG* pMsg)
+BOOL CWeatherView::PreTranslateMessage(MSG* pMsg) //ctrl + Lbutton으로 윈도우를 이동시키기 위한 키보드 입력 함수
 {
 	// TODO: 여기에 특수화된 코드를 추가 및/또는 기본 클래스를 호출합니다.
 	switch (pMsg->message)
@@ -670,11 +831,10 @@ BOOL CWeatherView::PreTranslateMessage(MSG* pMsg)
 	return CFormView::PreTranslateMessage(pMsg);
 }
 
-int CWeatherView::Show_Tooltip(int m_status, CPoint point) {
-
+int CWeatherView::Show_Tooltip(int m_status, CPoint point)//syncdata함수에서 얻어온 정보를 토대로 데이터를 툴팁으로 표현하는 함수
+{
 		CString tooltip;
 		KBJ k;
-
 		int loop = 0;
 		int index = 0;
 		if ((mode == 1) || (mode == 3)) {
@@ -683,7 +843,7 @@ int CWeatherView::Show_Tooltip(int m_status, CPoint point) {
 					if (map_rect[0][loop].PtInRect(point)) {		
 						index = k.Get_Index_From_Cord(Syncdata(map_rect[0][loop]));
 						k.Parse_info_seq_1(k.RemoveChar(k.Get_Weather_From_Url(0, info[index].grid)),info[index]);
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
+						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky[0], info[index].pty[0], info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
 						m_pToolTip->AddTool(this, tooltip, NULL, 0);
 						m_pToolTip->Activate(TRUE);
 						return 1;
@@ -692,206 +852,11 @@ int CWeatherView::Show_Tooltip(int m_status, CPoint point) {
 				m_pToolTip->Activate(FALSE);
 				return 0;
 			}
-			else if (map_status == 1) {
+			else  /*(map_status == 1)*/ {
 				for (loop = 0; loop < num_towns; loop++) {
-					if (map_rect[1][loop].PtInRect(point)) {
-						index = k.Get_Index_From_Cord(Syncdata(map_rect[1][loop]));
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
-						m_pToolTip->AddTool(this, tooltip, NULL, 0);
-						m_pToolTip->Activate(TRUE);
-						return 1;
-					}
-				}
-				m_pToolTip->Activate(FALSE);
-				return 0;
-			}
-			else if (map_status == 2) {
-				for (loop = 0; loop < num_towns; loop++) {
-					if (map_rect[2][loop].PtInRect(point)) {
-						index = k.Get_Index_From_Cord(Syncdata(map_rect[2][loop]));
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
-						m_pToolTip->AddTool(this, tooltip, NULL, 0);
-						m_pToolTip->Activate(TRUE);
-						return 1;
-					}
-				}
-				m_pToolTip->Activate(FALSE);
-				return 0;
-			}
-			else if (map_status == 3) {
-				for (loop = 0; loop < num_towns; loop++) {
-					if (map_rect[3][loop].PtInRect(point)) {
-						index = k.Get_Index_From_Cord(Syncdata(map_rect[3][loop]));
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
-						m_pToolTip->AddTool(this, tooltip, NULL, 0);
-						m_pToolTip->Activate(TRUE);
-						return 1;
-					}
-				}
-				m_pToolTip->Activate(FALSE);
-				return 0;
-			}
-			else if (map_status == 4) {
-				for (loop = 0; loop < num_towns; loop++) {
-					if (map_rect[4][loop].PtInRect(point)) {
-						index = k.Get_Index_From_Cord(Syncdata(map_rect[4][loop]));
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
-						m_pToolTip->AddTool(this, tooltip, NULL, 0);
-						m_pToolTip->Activate(TRUE);
-						return 1;
-					}
-				}
-				m_pToolTip->Activate(FALSE);
-				return 0;
-			}
-			else if (map_status == 5) {
-				for (loop = 0; loop < num_towns; loop++) {
-					if (map_rect[5][loop].PtInRect(point)) {
-						index = k.Get_Index_From_Cord(Syncdata(map_rect[5][loop]));
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0], info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
-						m_pToolTip->AddTool(this, tooltip, NULL, 0);
-						m_pToolTip->Activate(TRUE);
-						return 1;
-					}
-				}
-				m_pToolTip->Activate(FALSE);
-				return 0;
-			}
-			else if (map_status == 6) {
-				for (loop = 0; loop < num_towns; loop++) {
-					if (map_rect[6][loop].PtInRect(point)) {
-						index = k.Get_Index_From_Cord(Syncdata(map_rect[6][loop]));
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
-						m_pToolTip->AddTool(this, tooltip, NULL, 0);
-						m_pToolTip->Activate(TRUE);
-						return 1;
-					}
-				}
-				m_pToolTip->Activate(FALSE);
-				return 0;
-			}
-			else if (map_status == 7) {
-				for (loop = 0; loop < num_towns; loop++) {
-					if (map_rect[7][loop].PtInRect(point)) {
-						index = k.Get_Index_From_Cord(Syncdata(map_rect[7][loop]));
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
-						m_pToolTip->AddTool(this, tooltip, NULL, 0);
-						m_pToolTip->Activate(TRUE);
-						return 1;
-					}
-				}
-				m_pToolTip->Activate(FALSE);
-				return 0;
-			}
-			else if (map_status == 8) {
-				for (loop = 0; loop < num_towns; loop++) {
-					if (map_rect[8][loop].PtInRect(point)) {
-						index = k.Get_Index_From_Cord(Syncdata(map_rect[8][loop]));
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
-						m_pToolTip->AddTool(this, tooltip, NULL, 0);
-						m_pToolTip->Activate(TRUE);
-						return 1;
-					}
-				}
-				m_pToolTip->Activate(FALSE);
-				return 0;
-			}
-			else if (map_status == 9) {
-				for (loop = 0; loop < num_towns; loop++) {
-					if (map_rect[9][loop].PtInRect(point)) {
-						index = k.Get_Index_From_Cord(Syncdata(map_rect[9][loop]));
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
-						m_pToolTip->AddTool(this, tooltip, NULL, 0);
-						m_pToolTip->Activate(TRUE);
-						return 1;
-					}				
-				}
-				m_pToolTip->Activate(FALSE);
-				return 0;
-			}
-			else if (map_status == 10) {
-				for (loop = 0; loop < num_towns; loop++) {
-					if (map_rect[10][loop].PtInRect(point)) {
-						index = k.Get_Index_From_Cord(Syncdata(map_rect[10][loop]));
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
-						m_pToolTip->AddTool(this, tooltip, NULL, 0);
-						m_pToolTip->Activate(TRUE);
-						return 1;
-					}
-				}
-				m_pToolTip->Activate(FALSE);
-				return 0;
-			}
-			else if (map_status == 11) {
-				for (loop = 0; loop < num_towns; loop++) {
-					if (map_rect[11][loop].PtInRect(point)) {
-						index = k.Get_Index_From_Cord(Syncdata(map_rect[11][loop]));
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
-						m_pToolTip->AddTool(this, tooltip, NULL, 0);
-						m_pToolTip->Activate(TRUE);
-						return 1;
-					}
-				}
-				m_pToolTip->Activate(FALSE);
-				return 0;
-			}
-			else if (map_status == 12) {
-				for (loop = 0; loop < num_towns; loop++) {
-					if (map_rect[12][loop].PtInRect(point)) {
-						index = k.Get_Index_From_Cord(Syncdata(map_rect[12][loop]));
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
-						m_pToolTip->AddTool(this, tooltip, NULL, 0);
-						m_pToolTip->Activate(TRUE);
-						return 1;
-					}
-				}
-				m_pToolTip->Activate(FALSE);
-				return 0;
-			}
-			else if (map_status == 13) {
-				for (loop = 0; loop < num_towns; loop++) {
-					if (map_rect[13][loop].PtInRect(point)) {
-						index = k.Get_Index_From_Cord(Syncdata(map_rect[13][loop]));
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
-						m_pToolTip->AddTool(this, tooltip, NULL, 0);
-						m_pToolTip->Activate(TRUE);
-						return 1;
-					}
-				}
-				m_pToolTip->Activate(FALSE);
-				return 0;
-			}
-			else if (map_status == 14) {
-				for (loop = 0; loop < num_towns; loop++) {
-					if (map_rect[14][loop].PtInRect(point)) {
-						index = k.Get_Index_From_Cord(Syncdata(map_rect[14][loop]));
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
-						m_pToolTip->AddTool(this, tooltip, NULL, 0);
-						m_pToolTip->Activate(TRUE);
-						return 1;
-					}
-				}
-				m_pToolTip->Activate(FALSE);
-				return 0;
-			}
-			else if (map_status == 15) {
-				for (loop = 0; loop < num_towns; loop++) {
-					if (map_rect[15][loop].PtInRect(point)) {
-						index = k.Get_Index_From_Cord(Syncdata(map_rect[15][loop]));
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
-						m_pToolTip->AddTool(this, tooltip, NULL, 0);
-						m_pToolTip->Activate(TRUE);
-						return 1;
-					}
-				}
-				m_pToolTip->Activate(FALSE);
-				return 0;
-			}
-			else if (map_status == 16) {
-				for (loop = 0; loop < num_towns; loop++) {
-					if (map_rect[16][loop].PtInRect(point)) {
-						index = k.Get_Index_From_Cord(Syncdata(map_rect[16][loop]));
-						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky, info[index].pty, info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
+					if (map_rect[map_status][loop].PtInRect(point)) {
+						index = k.Get_Index_From_Cord(Syncdata(map_rect[map_status][loop]));
+						tooltip.Format(_T("온도 : %.1f 하늘 %d 강수 : %d \r\n강수확률 : %d 예상강수량 : %.1f 예상적설량 : %.1f \r\n풍속 : %.1f 풍향 : %d \r\n 습도 : %d"), info[index].temp[0].tmp, info[index].sky[0], info[index].pty[0], info[index].pop[0], info[index].r6, info[index].s6, info[index].ws[0], info[index].wd, info[index].reh[0]);
 						m_pToolTip->AddTool(this, tooltip, NULL, 0);
 						m_pToolTip->Activate(TRUE);
 						return 1;
@@ -903,7 +868,8 @@ int CWeatherView::Show_Tooltip(int m_status, CPoint point) {
 		}
 	return 0;
 }
-town_cord CWeatherView::Syncdata(CRect m_rect) {
+town_cord CWeatherView::Syncdata(CRect m_rect)  //툴팁표시를 위해 마우스 포인터가 위치한 곳의 도시동 정보를 얻어오는 함수
+{
 
 	int loop = 0;
 	Town_Cord cord = { 0 };
@@ -1046,7 +1012,7 @@ town_cord CWeatherView::Syncdata(CRect m_rect) {
 	else if (map_status == 10) {
 		for (loop = 0; loop < num_towns; loop++) {
 			if (m_rect == map_rect[10][loop]) {
-				switch (loop) {				
+				switch (loop) {
 				case 0: cord.do_ = 13; cord.si = 3; cord.dong = 1; break;
 				case 1: cord.do_ = 13; cord.si = 6; cord.dong = 1; break;
 				case 2: cord.do_ = 13; cord.si = 13; cord.dong = 1; break;
@@ -1126,7 +1092,434 @@ town_cord CWeatherView::Syncdata(CRect m_rect) {
 			}
 		}
 	}
-
 	return cord;
 }
 
+UINT Moving_Bmp(LPVOID param) //주기적으로 실행되며 애니메이션 구현을 위한 3개의 bmp중 어떤 것을 출력하는지 로테이션 해주는 함수 
+{
+	while (1)
+	{
+		if(++cnt_bmp == 3) cnt_bmp = 0;
+		AfxGetMainWnd()->Invalidate(1);		
+		Sleep(1000);
+	}
+	return 0;
+}
+int CWeatherView::Print_All_Moving_Bmp(CPaintDC &dc) //각 상황에 맞게 날씨 아이콘을 지도에 띄우는 함수
+{
+	int loop;
+	KBJ kbj;
+	int tem,rain;
+	int index = 0;
+	int x_shift, y_shift;
+	x_shift = 10;
+	y_shift = -10;
+	if ((mode == 1) || (mode == 3)){
+		if (map_status != 0)
+		{
+			for (loop = 0; loop < num_towns; loop++){
+
+				index = kbj.Get_Index_From_Cord(Syncdata(map_rect[map_status][loop]));
+				tem = info[index].sky[0];
+				index = kbj.Get_Index_From_Cord(Syncdata(map_rect[map_status][loop]));
+				rain = info[index].pty[0];
+				if (rain == 0){
+					if (cnt_bmp == 0){
+						if (tem == 1)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+								map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_SUNNY);
+						}
+						else if (tem == 2)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+								map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_SCLOUD_1);
+						}
+						else if (tem == 3)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+								map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_MCLOUD_1);
+						}
+						else if (tem == 4)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+								map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_CLOUD_1);
+						}
+					}
+					if (cnt_bmp == 1){
+						if (tem == 1)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+								map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_SUNNY);
+						}
+						else if (tem == 2)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+								map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_SCLOUD_2);
+						}
+						else if (tem == 3)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+								map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_MCLOUD_2);
+							//Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SUN1);
+						}
+						else if (tem == 4)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+								map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_CLOUD_2);
+							//Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SUN1);
+						}
+					}
+					if (cnt_bmp == 2){
+						if (tem == 1)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+								map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_SUNNY);
+						}
+						else if (tem == 2)
+						{
+
+							Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+								map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_SCLOUD_3);
+							//Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SUN1);
+						}
+						else if (tem == 3)
+						{
+
+							Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+								map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_MCLOUD3);
+							//Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SUN1);
+						}
+						else if (tem == 4)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+								map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_CLOUD_3);
+							//Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SUN1);
+						}
+					}
+				}
+				else if (rain == 1){
+					if (cnt_bmp == 0){
+						Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+							map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_RAIN_1);
+					}
+					if (cnt_bmp == 1){
+
+
+						Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+							map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_RAIN_2);
+
+
+					}
+					if (cnt_bmp == 2){
+
+						Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+							map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_RAIN_3);
+
+					}
+				}
+				else if (rain == 2){
+					if (cnt_bmp == 0){
+
+						Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+							map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_SNOWRAIN_1);
+
+					}
+					if (cnt_bmp == 1){
+
+
+						Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+							map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_SNOWRAIN_2);
+
+
+					}
+					if (cnt_bmp == 2){
+
+						Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+							map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_SNOWRAIN_3);
+
+					}
+				}
+				else if (rain == 3){
+					if (cnt_bmp == 0){
+
+						Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+							map_rect[map_status][loop].Height() / 2 + map_rect[0][loop].top + y_shift, dc, IDB_SNOW_1);
+
+					}
+					if (cnt_bmp == 1){
+
+
+						Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+							map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_SNOW_2);
+
+
+					}
+					if (cnt_bmp == 2){
+
+						Print_Unvisible_Bmp(map_rect[map_status][loop].Width() / 2 + map_rect[map_status][loop].left + x_shift,
+							map_rect[map_status][loop].Height() / 2 + map_rect[map_status][loop].top + y_shift, dc, IDB_SNOW_3);
+
+					}
+				}
+			}
+		}
+
+		else if (map_status == 0)
+		{
+			for (loop = 0; loop < num_towns; loop++){
+				index = kbj.Get_Index_From_Cord(Syncdata(map_rect[map_status][loop]));
+				tem = info[index].sky[0];
+				index = kbj.Get_Index_From_Cord(Syncdata(map_rect[map_status][loop]));
+				rain = info[index].pty[0];
+				if (rain == 0){
+					if (cnt_bmp == 0){
+						if (tem == 1)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SUNNY);
+						}
+						else if (tem == 2)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SCLOUD_1);
+						}
+						else if (tem == 3)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_MCLOUD_1);
+
+						}
+						else if (tem == 4)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_CLOUD_1);
+						}
+					}
+					if (cnt_bmp == 1){
+						if (tem == 1)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SUNNY2);
+						}
+						else if (tem == 2)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SCLOUD_2);
+
+						}
+						else if (tem == 3)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_MCLOUD_2);
+							//Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SUN1);
+						}
+						else if (tem == 4)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_CLOUD_2);
+							//Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SUN1);
+						}
+					}
+					if (cnt_bmp == 2){
+						if (tem == 1)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SUNNY3);
+						}
+						else if (tem == 2)
+						{
+
+							Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SCLOUD_3);
+							//Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SUN1);
+						}
+						else if (tem == 3)
+						{
+
+							Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_MCLOUD3);
+							//Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SUN1);
+						}
+						else if (tem == 4)
+						{
+							Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_CLOUD_3);
+							//Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SUN1);
+						}
+					}
+				}
+				else if (rain == 1){
+					if (cnt_bmp == 0){
+						Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_RAIN_1);
+					}
+					if (cnt_bmp == 1){
+
+
+						Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_RAIN_2);
+
+
+					}
+					if (cnt_bmp == 2){
+
+						Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_RAIN_3);
+
+					}
+				}
+				else if (rain == 2){
+					if (cnt_bmp == 0){
+
+						Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SNOWRAIN_1);
+
+					}
+					if (cnt_bmp == 1){
+
+
+						Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SNOWRAIN_2);
+
+
+					}
+					if (cnt_bmp == 2){
+
+						Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SNOWRAIN_3);
+
+					}
+				}
+				else if (rain == 3){
+					if (cnt_bmp == 0){
+						Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SNOW_1);
+					}
+					if (cnt_bmp == 1){
+						Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SNOW_2);
+					}
+					if (cnt_bmp == 2){
+						Print_Unvisible_Bmp(map_rect[map_status][loop].left + x_shift, map_rect[map_status][loop].top + y_shift, dc, IDB_SNOW_3);
+					}
+				}
+
+			}
+		}
+	}
+	return 0;
+}
+
+
+int CWeatherView::Print_Unvisible_Bmp(int x, int y, CPaintDC &dc, int R_id) // 배경 투명한 비트맵을 띄우는 함수, 인자 dc
+{
+	HBITMAP old;
+	HBITMAP bmp;
+	switch (R_id)
+	{
+		case IDB_SUNNY:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SUNNY)); break;
+		case IDB_SUNNY2:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SUNNY2)); break;
+		case IDB_SUNNY3:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SUNNY3)); break;
+		case IDB_SCLOUD_1:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SCLOUD_1)); break;
+		case IDB_SCLOUD_2:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SCLOUD_2)); break;
+		case IDB_SCLOUD_3:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SCLOUD_3)); break;
+		case IDB_MCLOUD_1:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_MCLOUD_1)); break;
+		case IDB_MCLOUD_2:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_MCLOUD_2)); break;
+		case IDB_MCLOUD3:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_MCLOUD3)); break;
+		case IDB_CLOUD_1:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_CLOUD_1)); break;
+		case IDB_CLOUD_2:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_CLOUD_2)); break;
+		case IDB_CLOUD_3:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_CLOUD_3)); break;
+		case IDB_RAIN_1:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_RAIN_1)); break;
+		case IDB_RAIN_2:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_RAIN_2)); break;
+		case IDB_RAIN_3:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_RAIN_3)); break;
+		case IDB_SNOWRAIN_1:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SNOWRAIN_1)); break;
+		case IDB_SNOWRAIN_2:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SNOWRAIN_2)); break;
+		case IDB_SNOWRAIN_3:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SNOWRAIN_3)); break;
+		case IDB_SNOW_1:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SNOW_1)); break;
+		case IDB_SNOW_2:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SNOW_2)); break;
+		case IDB_SNOW_3:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SNOW_3)); break;
+		default:
+			bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SUNNY)); break;
+	}
+	if (bmp != NULL)
+	{
+		BITMAP bmInfo;
+		CDC memDC;
+		memDC.CreateCompatibleDC(&dc);
+		old = (HBITMAP)::SelectObject(memDC.m_hDC, bmp);
+		::GetObject(bmp, sizeof(BITMAP), &bmInfo);
+		::TransparentBlt(dc.m_hDC, x, y, bmInfo.bmWidth, bmInfo.bmHeight, memDC.m_hDC,
+			 0, 0, bmInfo.bmWidth, bmInfo.bmHeight, RGB(44, 42, 54));
+		::SelectObject(memDC.m_hDC, old);
+		memDC.DeleteDC();
+	}
+	return 0;
+}
+
+int CWeatherView::Print_Unvisible_Bmp(int x, int y, CDC* &cdc, int R_id)  //투명 배경 비트맵을 출력하는 함수, 인자 cdc
+{
+	HBITMAP old;
+	HBITMAP bmp;
+	switch (R_id)
+	{
+	case IDB_SUNNY:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SUNNY)); break;
+	case IDB_SUNNY2:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SUNNY2)); break;
+	case IDB_SUNNY3:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SUNNY3)); break;
+	case IDB_SCLOUD_1:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SCLOUD_1)); break;
+	case IDB_SCLOUD_2:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SCLOUD_2)); break;
+	case IDB_SCLOUD_3:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SCLOUD_3)); break;
+	case IDB_MCLOUD_1:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_MCLOUD_1)); break;
+	case IDB_MCLOUD_2:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_MCLOUD_2)); break;
+	case IDB_MCLOUD3:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_MCLOUD3)); break;
+	case IDB_CLOUD_1:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_CLOUD_1)); break;
+	case IDB_CLOUD_2:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_CLOUD_2)); break;
+	case IDB_CLOUD_3:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_CLOUD_3)); break;
+	case IDB_RAIN_1:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_RAIN_1)); break;
+	case IDB_RAIN_2:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_RAIN_2)); break;
+	case IDB_RAIN_3:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_RAIN_3)); break;
+	case IDB_SNOWRAIN_1:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SNOWRAIN_1)); break;
+	case IDB_SNOWRAIN_2:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SNOWRAIN_2)); break;
+	case IDB_SNOWRAIN_3:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SNOWRAIN_3)); break;
+	case IDB_SNOW_1:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SNOW_1)); break;
+	case IDB_SNOW_2:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SNOW_2)); break;
+	case IDB_SNOW_3:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SNOW_3)); break;
+	default:
+		bmp = ::LoadBitmap(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDB_SUNNY)); break;
+	}
+	if (bmp != NULL)
+	{
+		BITMAP bmInfo;
+		CDC memDC;
+		memDC.CreateCompatibleDC(cdc);
+		old = (HBITMAP)::SelectObject(memDC.m_hDC, bmp);
+		::GetObject(bmp, sizeof(BITMAP), &bmInfo);
+		::TransparentBlt(cdc->m_hDC, x, y, bmInfo.bmWidth, bmInfo.bmHeight, memDC.m_hDC,
+			0, 0, bmInfo.bmWidth, bmInfo.bmHeight, RGB(44, 42, 54));
+		::SelectObject(memDC.m_hDC, old);
+		memDC.DeleteDC();
+	}
+	return 0;
+}

@@ -7,7 +7,7 @@
 #include "xml_parsing.h"
 
 // CDialogSetting 대화 상자입니다.
-// 0923
+
 
 IMPLEMENT_DYNAMIC(CDialogSetting, CDialogEx)
 extern std::vector<address_info> address;
@@ -28,6 +28,7 @@ extern int POSIT;
 extern int map_status;
 extern int mode2_x;
 extern int mode2_y;
+
 CDialogSetting::CDialogSetting(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_DIALOG1, pParent)
 {
@@ -54,9 +55,7 @@ BEGIN_MESSAGE_MAP(CDialogSetting, CDialogEx)
 	ON_BN_CLICKED(IDOK, &CDialogSetting::OnBnClickedOk)
 	ON_CBN_SELCHANGE(IDC_COMBO2, &CDialogSetting::OnCbnSelchangeCombo2)
 	ON_CBN_SELCHANGE(IDC_COMBO3, &CDialogSetting::OnCbnSelchangeCombo3)
-	ON_CBN_SELCHANGE(IDC_COMBO4, &CDialogSetting::OnCbnSelchangeCombo4)
 	ON_WM_DESTROY()
-	ON_CBN_SELCHANGE(IDC_COMBO5, &CDialogSetting::OnCbnSelchangeCombo5)
 END_MESSAGE_MAP()
 
 // CDialogSetting 메시지 처리기입니다.
@@ -78,8 +77,8 @@ void CDialogSetting::OnPaint()
 	dc.BitBlt(0, 0, bmpinfo.bmWidth, bmpinfo.bmHeight, &dcmem, 0, 0, SRCCOPY);
 }
 
-BOOL CDialogSetting::OnInitDialog()
-{
+BOOL CDialogSetting::OnInitDialog() //처음 Setting창이 열릴 때 Combo Box에 데이터를 넣는 함수.
+{                                   //레지스트리의 값을 읽어와서 ComboBox에 값을 넣고 다시 전역 변수에 값을 return.
 	CDialogEx::OnInitDialog();
 
 	// TODO:  여기에 추가 초기화 작업을 추가합니다.
@@ -158,18 +157,30 @@ BOOL CDialogSetting::OnInitDialog()
 		}
 	}
 	numSi = numsi;
+	int numdong = 0;
 
 	addressDong.clear();
 	m_ComboDong.ResetContent();
-	int numdong = 0;
-	int SiCurser = m_DialogSi;
 
+	CString DostrCurser;
+	for (int i = 0; i < NUM_OF_ADDRESS; i++) {
+		if (addressDo[DoCurser] == address[i].addressDo)
+			DostrCurser = addressDo[DoCurser];
+	}
+	CString SistrCurser;
+	int SiCurser = m_DialogSi;
+	for (int i = 0; i < NUM_OF_ADDRESS; i++) {
+		if (addressSi[SiCurser] == address[i].addressSi)
+			SistrCurser = addressSi[SiCurser];
+	}
+	strSi = "";
 	CString strDong("");
 	for (int i = 0; i < NUM_OF_ADDRESS; i++) {
-		if (address[i].addressDong != "") {						//빈칸 예외처리
-			if (addressSi[SiCurser] == address[i].addressSi) {	//커서의 str == 현재 data
+		if (address[i].addressSi != "" && address[i].addressDong != "") {
+			if (DostrCurser == address[i].addressDo && SistrCurser == address[i].addressSi) {
+				CString old_StrSi = address[i].addressSi;
 				CString old_StrDong = address[i].addressDong;
-				if (strDong != old_StrDong) {					//중복 제거
+				if (strSi != old_StrSi && strDong != old_StrDong) {
 					AfxDialogSetting.m_ComboDong.AddString(address[i].addressDong);
 					addressDong.push_back(address[i].addressDong);
 					numdong++;
@@ -186,44 +197,78 @@ BOOL CDialogSetting::OnInitDialog()
 	m_ComboSi.SetCurSel(AfxDialogSetting.m_DialogSi);
 	m_ComboDong.SetCurSel(AfxDialogSetting.m_DialogDong);
 	m_ComboUpdate.SetCurSel(AfxDialogSetting.m_DialogUpdate);
-	return TRUE;  // return TRUE unless you set the focus to a control
-				  // 예외: OCX 속성 페이지는 FALSE를 반환해야 합니다.
+
+	m_ComboDo.GetLBText(m_ComboDo.GetCurSel(), AfxDialogSetting.Dialog_strDo);
+	m_ComboSi.GetLBText(m_ComboSi.GetCurSel(), AfxDialogSetting.Dialog_strSi);
+	m_ComboDong.GetLBText(m_ComboDong.GetCurSel(), AfxDialogSetting.Dialog_strDong);
+
+	for (int i = 0; i < NUM_OF_ADDRESS; i++) {
+		if (address[i].addressDo == Dialog_strDo)
+			AfxDialogSetting.Dialog_CordDo = address[i].cord.do_;
+		if (address[i].addressSi == Dialog_strSi)
+			AfxDialogSetting.Dialog_CordSi = address[i].cord.si;
+		if (address[i].addressDong == Dialog_strDong)
+			AfxDialogSetting.Dialog_CordDong = address[i].cord.dong;
+	}
+	mode = AfxDialogSetting.m_DialogMode + 1;
+	user_do = AfxDialogSetting.Dialog_CordDo;
+	user_si = AfxDialogSetting.Dialog_CordSi;
+	user_dong = AfxDialogSetting.Dialog_CordDong;
+	update = AfxDialogSetting.m_DialogUpdate + 1;
+	fix = AfxDialogSetting.m_DialogFix;
+	return TRUE;
+	// return TRUE unless you set the focus to a control
+	// 예외: OCX 속성 페이지는 FALSE를 반환해야 합니다.
 }
 
 
-void CDialogSetting::OnBnClickedOk()
-{
+void CDialogSetting::OnBnClickedOk()// Setting창에서 OK버튼을 누를 시 전역 변수에 현재 Curser값을 넣고
+{								    // Mode에 맞게 윈도우 크기를 조정하거나 투명으로 만드는 함수.
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	//ok 버튼 클릭하면 전역변수 및 레지스트리에 저장하는 코드
-	cs.Lock();
-	AfxDialogSetting.m_DialogFix = m_CheckFix.GetCheck();			//fix 0 or 1
-	AfxDialogSetting.m_DialogMode = m_ComboMode.GetCurSel();	//Mode 1, 2, 3
+
+	AfxDialogSetting.m_DialogFix = m_CheckFix.GetCheck();
+	AfxDialogSetting.m_DialogMode = m_ComboMode.GetCurSel();
 	AfxDialogSetting.m_DialogDo = m_ComboDo.GetCurSel();
 	AfxDialogSetting.m_DialogSi = m_ComboSi.GetCurSel();
 	AfxDialogSetting.m_DialogDong = m_ComboDong.GetCurSel();
-	AfxDialogSetting.m_DialogUpdate = m_ComboUpdate.GetCurSel();	//1000ms 씩 증가.
-	mode = AfxDialogSetting.m_DialogMode+1;
-	user_do = AfxDialogSetting.m_DialogDo + 1;
-	user_si = AfxDialogSetting.m_DialogSi ;
-	user_dong = AfxDialogSetting.m_DialogDong ;
+	AfxDialogSetting.m_DialogUpdate = m_ComboUpdate.GetCurSel();
+
+	m_ComboDo.GetLBText(m_ComboDo.GetCurSel(), AfxDialogSetting.Dialog_strDo);
+	m_ComboSi.GetLBText(m_ComboSi.GetCurSel(), AfxDialogSetting.Dialog_strSi);
+	m_ComboDong.GetLBText(m_ComboDong.GetCurSel(), AfxDialogSetting.Dialog_strDong);
+
+	for (int i = 0; i < NUM_OF_ADDRESS; i++)
+		if (address[i].addressDo == Dialog_strDo)
+			AfxDialogSetting.Dialog_CordDo = address[i].cord.do_;
+	for (int i = 0; i < NUM_OF_ADDRESS; i++)
+		if (address[i].addressSi == Dialog_strSi)
+			AfxDialogSetting.Dialog_CordSi = address[i].cord.si;
+	for (int i = 0; i < NUM_OF_ADDRESS; i++)
+		if (address[i].addressDong == Dialog_strDong)
+			AfxDialogSetting.Dialog_CordDong = address[i].cord.dong;
+	cs.Lock();
+	mode = AfxDialogSetting.m_DialogMode + 1;
+	user_do = AfxDialogSetting.Dialog_CordDo;
+	user_si = AfxDialogSetting.Dialog_CordSi;
+	user_dong = AfxDialogSetting.Dialog_CordDong;
 	update = AfxDialogSetting.m_DialogUpdate + 1;
 	fix = AfxDialogSetting.m_DialogFix;
 
 	if (fix == 1)
 	{
-		//::SetWindowLong((HWND)AfxGetMainWnd(), GWL_EXSTYLE, WS_POPUP);
 		AfxGetMainWnd()->ModifyStyleEx(WS_EX_CLIENTEDGE, 0, SWP_FRAMECHANGED);
 		AfxGetMainWnd()->SetLayeredWindowAttributes(RGB(255, 255, 255), 255, LWA_COLORKEY);
 	}
 	else if (fix == 0)
 	{
-		//AfxGetMainWnd()->ModifyStyleEx(0, WS_OVERLAPPEDWINDOW, SWP_FRAMECHANGED);
 		AfxGetMainWnd()->SetLayeredWindowAttributes(0, 255, LWA_ALPHA);
 	}
 	KBJ k;
 	if (mode == 1)
 	{
 		AfxGetMainWnd()->MoveWindow(0, 0, 700, 700, 1);
+		AfxGetMainWnd()->Invalidate(1);
 		POSIT = 470;
 		k.Set_Towns(map_status);
 	}
@@ -232,18 +277,15 @@ void CDialogSetting::OnBnClickedOk()
 		AfxGetMainWnd()->MoveWindow(0, 0, 920, 327, 1);
 		mode2_x = 0;
 		mode2_y = 0;
-	//	POSIT = 470;
 	}
 	else if (mode == 3)
 	{
-		AfxGetMainWnd()->MoveWindow(0, 0, 1600, 700, 1);
+		AfxGetMainWnd()->MoveWindow(0, 0, 1640, 700, 1);
 		POSIT = 470;
 		k.Set_Towns(map_status);
-		mode2_x = 600;
-		mode2_y = 200;
+		mode2_x = 700;
+		mode2_y = 220;
 	}
-
-
 	update_flag = 0;
 	DWORD nExitCode = NULL;
 	GetExitCodeThread(pThread->m_hThread, &nExitCode);
@@ -255,12 +297,11 @@ void CDialogSetting::OnBnClickedOk()
 	CDialogEx::OnOK();
 }
 
-void CDialogSetting::OnCbnSelchangeCombo2()	//Do
+void CDialogSetting::OnCbnSelchangeCombo2()	//Combo Box의 도를 선택했을 때 도에 맞는 시를 넣는 함수.
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 
 	int numsi = 0;
-
 	addressSi.clear();
 	addressDong.clear();
 	m_ComboSi.ResetContent();
@@ -290,22 +331,35 @@ void CDialogSetting::OnCbnSelchangeCombo2()	//Do
 }
 
 
-void CDialogSetting::OnCbnSelchangeCombo3()	//Si
+void CDialogSetting::OnCbnSelchangeCombo3()	//Combo Box의 시를 선택했을 때 시에 맞는 동를 넣는 함수.
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 
-	int numdong = 0;
+	int numdong = 0, numsi = 0;
 
 	addressDong.clear();
 	m_ComboDong.ResetContent();
 
+	CString DostrCurser;
+	int DoCurser = m_ComboDo.GetCurSel();
+	for (int i = 0; i < NUM_OF_ADDRESS; i++) {
+		if (addressDo[DoCurser] == address[i].addressDo)
+			DostrCurser = addressDo[DoCurser];
+	}
+	CString SistrCurser;
 	int SiCurser = m_ComboSi.GetCurSel();
+	for (int i = 0; i < NUM_OF_ADDRESS; i++) {
+		if (addressSi[SiCurser] == address[i].addressSi)
+			SistrCurser = addressSi[SiCurser];
+	}
+	CString strSi("");
 	CString strDong("");
 	for (int i = 0; i < NUM_OF_ADDRESS; i++) {
-		if (address[i].addressDong != "") {
-			if (addressSi[SiCurser] == address[i].addressSi) {
+		if (address[i].addressSi != "" && address[i].addressDong != "") {
+			if (DostrCurser == address[i].addressDo && SistrCurser == address[i].addressSi) {
+				CString old_StrSi = address[i].addressSi;
 				CString old_StrDong = address[i].addressDong;
-				if (strDong != old_StrDong) {
+				if (strSi != old_StrSi && strDong != old_StrDong) {
 					AfxDialogSetting.m_ComboDong.AddString(address[i].addressDong);
 					addressDong.push_back(address[i].addressDong);
 					numdong++;
@@ -317,43 +371,3 @@ void CDialogSetting::OnCbnSelchangeCombo3()	//Si
 	numDong = numdong;
 }
 
-void CDialogSetting::OnCbnSelchangeCombo4()	//Dong
-{
-	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-
-}
-
-void CDialogSetting::OnDestroy()
-{
-	CDialogEx::OnDestroy();
-
-	AfxDialogSetting.m_DialogFix = m_CheckFix.GetCheck();			//fix 0 or 1
-	AfxDialogSetting.m_DialogMode = m_ComboMode.GetCurSel();	//Mode 1, 2, 3
-	AfxDialogSetting.m_DialogDo = m_ComboDo.GetCurSel();
-	AfxDialogSetting.m_DialogSi = m_ComboSi.GetCurSel();
-	AfxDialogSetting.m_DialogDong = m_ComboDong.GetCurSel();
-	AfxDialogSetting.m_DialogUpdate = m_ComboUpdate.GetCurSel();	//1000ms 씩 증가.
-
-	m_ComboDo.GetLBText(m_ComboDo.GetCurSel(), AfxDialogSetting.Dialog_strDo);
-	m_ComboSi.GetLBText(m_ComboSi.GetCurSel(), AfxDialogSetting.Dialog_strSi);
-	m_ComboDong.GetLBText(m_ComboDong.GetCurSel(), AfxDialogSetting.Dialog_strDong);
-
-	for (int i = 0; i < NUM_OF_ADDRESS; i++) {
-		if (address[i].addressDo == Dialog_strDo) {
-			if (address[i].addressSi == Dialog_strSi) {
-				if (address[i].addressDong == Dialog_strDong) {
-					AfxDialogSetting.Dialog_CordDo = address[i].cord.do_;
-					AfxDialogSetting.Dialog_CordSi = address[i].cord.si;
-					AfxDialogSetting.Dialog_CordDong = address[i].cord.dong;
-				}
-			}
-		}
-	}
-	// TODO: 여기에 메시지 처리기 코드를 추가합니다.
-}
-
-
-void CDialogSetting::OnCbnSelchangeCombo5()
-{
-	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-}
