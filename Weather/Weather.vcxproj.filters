@@ -89,9 +89,6 @@
     <Image Include="res\Toolbar.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
-    <Image Include="res\mode2.bmp">
-      <Filter>리소스 파일</Filter>
-    </Image>
     <Image Include="res\강원도.bmp">
       <Filter>리소스 파일</Filter>
     </Image>

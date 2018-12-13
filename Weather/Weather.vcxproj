@@ -240,7 +240,6 @@
     <Image Include="res\Cloudy.bmp" />
     <Image Include="res\Littlecloud.bmp" />
     <Image Include="res\main_show.bmp" />
-    <Image Include="res\mode2.bmp" />
     <Image Include="res\setting.bmp" />
     <Image Include="res\SUN1.bmp" />
     <Image Include="res\SUN2.bmp" />

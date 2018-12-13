@@ -80,8 +80,6 @@ IDR_WeatherTYPE         ICON                    "res\\WeatherDoc.ico"
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
 
-IDB_MODE2               BITMAP                  "res\\mode2.bmp"
-
 IDB_GANGWON             BITMAP                  "res\\강원도.bmp"
 
 IDB_GYEONGGY            BITMAP                  "res\\경기도.bmp"
@@ -233,15 +231,23 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOGEX 0, 0, 170, 62
+IDD_ABOUTBOX DIALOGEX 0, 0, 216, 106
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Weather 정보"
 FONT 9, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    ICON            IDR_MAINFRAME,IDC_STATIC,14,14,21,20
-    LTEXT           "Weather, 버전 1.0",IDC_STATIC,42,14,114,8,SS_NOPREFIX
-    LTEXT           "Copyright (C) 2018",IDC_STATIC,42,26,114,8
-    DEFPUSHBUTTON   "확인",IDOK,113,41,50,14,WS_GROUP
+    ICON            IDR_MAINFRAME,IDC_STATIC,15,14,18,18
+    DEFPUSHBUTTON   "확인",IDOK,159,85,50,14,WS_GROUP
+    LTEXT           "2013161016 김병집",IDC_STATIC,43,35,64,8
+    LTEXT           "2013161126 임종윤",IDC_STATIC,43,44,64,8
+    LTEXT           "2013161006 권희진",IDC_STATIC,110,35,64,8
+    LTEXT           "2013161007 김경재",IDC_STATIC,110,44,64,8
+    LTEXT           "제작자",IDC_STATIC,43,14,23,11
+    LTEXT           "한국기술교육대학교",IDC_STATIC,42,25,63,8
+    LTEXT           "문의메일 : ",IDC_STATIC,40,57,35,8
+    LTEXT           "housea40@gmail.com",IDC_STATIC,39,68,68,8
+    LTEXT           "소스코드 : ",IDC_STATIC,38,82,35,8
+    LTEXT           "www.github.com/KBJgithub",IDC_STATIC,38,91,90,8
 END
 
 IDD_WEATHER_FORM DIALOGEX 0, 0, 762, 404
@@ -316,9 +322,9 @@ BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 163
+        RIGHTMARGIN, 209
         TOPMARGIN, 7
-        BOTTOMMARGIN, 55
+        BOTTOMMARGIN, 99
     END
 
     IDD_WEATHER_FORM, DIALOG
@@ -352,6 +358,11 @@ BEGIN
 END
 
 IDD_DIALOG1 AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_ABOUTBOX AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
